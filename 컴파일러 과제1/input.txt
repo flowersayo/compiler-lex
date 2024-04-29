@@ -1,0 +1,9 @@
+aaabbbccceeeddddd abc1 abc2	abc3 abc1
+abc4;abc5,abc6
+_abc
+ABC	abc	cba
+123abc
+aaabbbcccdddeee
+
+ab^^c
+"ab"
