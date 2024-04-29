@@ -142,7 +142,7 @@ int main()
  
 
     
-    char test_data[] = "abc$";
+    char test_data[] = "abc$ ghj^";
 
 
     for (int i = 0; i < strlen(test_data); ++i) {
@@ -227,6 +227,26 @@ int main()
 
     if (index_start < index_next)
     {
+
+        if (str_pool[index_start] >= '0' && str_pool[index_start] <= '9')
+                {
+                    printf("Error - start with digit (%s)\n", str_pool + index_start);
+                    index_next = index_start; // 버퍼 초기화
+                }
+
+                else if (!isValid(index_start, index_next))
+                { 
+
+                    printf("Error - contains invalid character. other than English letters (both uppercase and lowercase), underscores, digits, and delimiters(%s)\n", str_pool + index_start);
+                    index_next = index_start;
+                }
+                else if ((index_next - index_start) > 15)
+                {
+                    printf("Error - Identifier too long (%s)\n", str_pool + index_start);
+                    index_next = index_start;
+                }
+                else
+                {
         int i = 0;
         int hash_key = 0;
 
@@ -256,6 +276,7 @@ int main()
                 sym_table[index][0] = -1;
                 sym_table[index][1] = -1;
         }
+                }
     }
 
     print_sym_table();
