@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "tn.h"
-
+#include "glob.h"
+extern reporterror(enum tnumber tn);
+extern int linenum;
 %}
 
 %% 
@@ -28,50 +30,45 @@
 "/=" return(TDIVASSIGN);
 "%=" return(TMODASSIGN);
 
+"!" 		return(TEXCLAM);
+"%" 		return(TMOD);
+"(" 		return(TLPAREN);
+")" 		return(TRPAREN);
+"*" 		return(TSTAR);
+"+" 		return(TPLUS);
+"," 		return(TCOMMA);
+"-" 		return(TMINUS);
+"/" 		return(TDIV);
+";" 		return(TSEMICOLON);
+"<" 		return(TLESS);
+"=" 		return(TEQUALS);
+">" 		return(TGREATER);
+"[" 		return(TLBRACKET);
+"]" 		return(TRBRACKET);
+"{" 		return(TLBRACE);
+"}" 		return(TRBRACE);
+":=" 		return(TASSIGN);
 
-"!" return(TEXCLAM);
-"%" return(TMOD);
-"(" return(TLPAREN);
-")" return(TRPAREN);
-"*" return(TSTAR);
-"+" return(TPLUS);
-"," return(TCOMMA);
-"-" return(TMINUS);
-"/" return(TDIV);
-";" return(TSEMICOLON);
-"<" return(TLESS);
-"=" return(TEQUALS);
-">" return(TGREATER);
-"[" return(TLBRACKET);
-"]" return(TRBRACKET);
-"{" return(TLBRACE);
-"}" return(TRBRACE);
-":=" return(TASSIGN);
-
-
-
-
-
-
-
-[A-Za-z_][A-Za-z0-9_]* return(TIDENT);
-[1-9][0-9]*|0([0-7]+|(x|X)[0-9A-Fa-f]*)? return(TINTEGER);
-[+-]?(([0–9]*\.?[0–9]+)|([0–9]+\.?[0–9]*))([Ee][+-]?[0–9]+)? return(TFLOAT);
-
-
-
+[+-]?[1-9][0-9]*|0([0-7]+|(x|X)[0-9A-Fa-f]*)? 					return(TINTEGER);
+[+-]?(([0–9]*\.?[0–9]+)|([0–9]+\.?[0–9]*))([Ee][+-]?[0–9]+)?	return(TFLOAT);
+[a-zA-Z_][a-zA-Z0-9_]*		{
+						if (yyleng >= MAXIDENTLEN)
+							reporterror(TLONGIDENT);
+						else {
+							symtable();
+						}				
+					}
 "/*"([^*]|\*+[^*/])*\**"*/" ;
-"//".* ;
-[ \t\n] ;
-. return(TERROR);
+"//".*						;
+[ \t]						;
+[\n]						linenum++;
+.							reporterror(TILLIDENT);
 
 %%
-
-
-
 
 int yywrap()
 {
 
 return 1;
 }
+
