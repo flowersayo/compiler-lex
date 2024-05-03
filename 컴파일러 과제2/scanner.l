@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include "tn.h"
 #include "glob.h"
-#inlucde "reporterror.c" 
 %}
 
 %% 

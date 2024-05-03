@@ -2,11 +2,13 @@
 #include <string.h> // strcmp
 #include <stdlib.h> // malloc
 #include "tn.h"
-
+#define MAXIDENTLEN 100
 #define SYM_TABLE_SIZE 100
 #define HASH_TABLE_SIZE 13 // 소수를 많이 활용
 
 typedef struct HTentry *HTpointer;
+
+const char *get_type(Tnumber num);
 
 int sym_index = 0; // sym table 에 새로운 항목을 추가할 때 사용되는 인덱스
 
@@ -106,7 +108,6 @@ void addSymbolTable(char *token, Tnumber tnumber)
 }
 
 // symbol table 에 존재하는지 여부에 따라서 토큰을 저장하는 함수
-// 존재
 int symtable(char *token, Tnumber tnumber)
 {
     // 해당 토큰의 해시 값 구하기
@@ -118,12 +119,14 @@ int symtable(char *token, Tnumber tnumber)
         addSymbolTable(token, tnumber);
         sym_index++;
         addHT(token, hash_value);
+
+        return sym_index - 1; // 직전 토큰이 저장된 인덱스
     }
     else
     { // 동일한 토큰이 이미 있는 경우
 
         printf("%s (Already exists. Hash: %d)\n", token, hash_value);
-        return htp->index; // 심볼 테이블 인덱스
+        return htp->index; // 그 토큰이 저장된 심볼테이블의 인덱스
     }
 }
 
