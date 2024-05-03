@@ -106,7 +106,8 @@ void addSymbolTable(char *token, Tnumber tnumber)
 }
 
 // symbol table 에 존재하는지 여부에 따라서 토큰을 저장하는 함수
-void symtable(char *token, Tnumber tnumber)
+// 존재
+int symtable(char *token, Tnumber tnumber)
 {
     // 해당 토큰의 해시 값 구하기
     int hash_value = computeHS(token, HASH_TABLE_SIZE);
@@ -122,6 +123,7 @@ void symtable(char *token, Tnumber tnumber)
     { // 동일한 토큰이 이미 있는 경우
 
         printf("%s (Already exists. Hash: %d)\n", token, hash_value);
+        return htp->index; // 심볼 테이블 인덱스
     }
 }
 

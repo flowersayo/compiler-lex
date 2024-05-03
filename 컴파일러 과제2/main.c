@@ -14,6 +14,8 @@ void main()
 {
    enum tnumber tn; // token number
 
+   init_sym_table();
+
    // 에러를 제외한 모든 의미있는 토큰 출력
    // 에러라면 토큰 출력하지 않고 에러메시지만 출력
 
@@ -67,12 +69,13 @@ void main()
          break;
       case TIDENT: // 식별자일경우 길이 체크
 
+         int st_idx = -1;          // 심볼 테이블에 저장된 토큰이 있는지
          if (yyleng > MAXIDENTLEN) // 지정된 길이를 넘어가면
             reporterror(
                 ERR_TOO_LONG_IDENT);
          else // 길이 이내의 정상 식별자이면 심볼테이블에 저장
          {
-            symtable(yytext, tn);
+            st_idx = symtable(yytext, tn);
          }
          // print_token();
          break;
