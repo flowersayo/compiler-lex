@@ -52,7 +52,7 @@ extern int linenum;
 [+-]?[1-9][0-9]*|0([0-7]+|(x|X)[0-9A-Fa-f]*)? 					return(TINTEGER);
 [+-]?(([0–9]*\.?[0–9]+)|([0–9]+\.?[0–9]*))([Ee][+-]?[0–9]+)?	return(TFLOAT);
 [a-zA-Z_][a-zA-Z0-9_]*		{
-						if (yyleng >= MAXIDENTLEN)
+						if (yyleng > MAXIDENTLEN)
 							reporterror(TLONGIDENT);
 						else {
 							symtable();
