@@ -1,12 +1,9 @@
-%{
+﻿%{
 #include <stdio.h>
 #include <stdlib.h>
 #include "tn.h"
 
 %}
-
-letter [a-zA_Z_]
-digit [0-9]
 
 %% 
 
@@ -30,8 +27,39 @@ digit [0-9]
 "*=" return(TMULASSIGN);
 "/=" return(TDIVASSIGN);
 "%=" return(TMODASSIGN);
+
+
+"!" return(TEXCLAM);
+"%" return(TMOD);
+"(" return(TLPAREN);
+")" return(TRPAREN);
+"*" return(TSTAR);
+"+" return(TPLUS);
+"," return(TCOMMA);
+"-" return(TMINUS);
+"/" return(TDIV);
+";" return(TSEMICOLON);
+"<" return(TLESS);
+"=" return(TEQUALS);
+">" return(TGREATER);
+"[" return(TLBRACKET);
+"]" return(TRBRACKET);
+"{" return(TLBRACE);
+"}" return(TRBRACE);
+":=" return(TASSIGN);
+
+
+
+
+
+
+
 [A-Za-z_][A-Za-z0-9_]* return(TIDENT);
-[1-9][0-9]*|0([0-7]+|(x|X)[0-9A-Fa-f]*)? return(TNUMBER);
+[1-9][0-9]*|0([0-7]+|(x|X)[0-9A-Fa-f]*)? return(TINTEGER);
+[+-]?(([0–9]*\.?[0–9]+)|([0–9]+\.?[0–9]*))([Ee][+-]?[0–9]+)? return(TFLOAT);
+
+
+
 "/*"([^*]|\*+[^*/])*\**"*/" ;
 "//".* ;
 [ \t\n] ;
@@ -47,4 +75,3 @@ int yywrap()
 
 return 1;
 }
-
