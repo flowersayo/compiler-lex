@@ -1,6 +1,7 @@
 
 enum tnumber
 {
+    TEOF,
     TCONST,
     TELSE,
     TIF,
@@ -42,5 +43,7 @@ enum tnumber
     TIDENT,
     TINTEGER,
     TFLOAT,
-    TERROR,
+    TLONGIDENT,
+    TILLIDENT,
+    TOVERFLOW
 };
