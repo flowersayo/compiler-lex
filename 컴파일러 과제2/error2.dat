@@ -1,0 +1,17 @@
+int main() {
+    	int a = 'a';
+
+	int l@ve = 0xA2;
+
+    	printf("The ASCII value of 'a' is: %d\n", a);
+	
+	float byebyedaedongjebye1886 = 3.14159;
+    	
+	double 321ca = 2.718281828459045;
+
+	int fixed_point = 31415;
+
+	float BlU3 = a % byebyedaedongjebye1886;
+	
+   	return 0;
+}

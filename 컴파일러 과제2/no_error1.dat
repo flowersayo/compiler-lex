@@ -1,0 +1,23 @@
+int sum_int(int a, int b);
+
+float div_float(float a, float b);
+
+int main(void) {
+
+	int min_cost = -28;
+
+  	int max_cost = 4;
+
+	int size1 = 44;
+
+	int size2 = 55;
+
+   	int result = sum(size1, size2);
+
+	if(min_cost == max_cost){
+   		print(div_float(2.423e+1, 0.9);
+	}
+
+   return 0;
+
+}
