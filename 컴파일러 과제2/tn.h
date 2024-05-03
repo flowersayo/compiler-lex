@@ -46,6 +46,7 @@ typedef enum tnumber
     TINTEGER,
     TFLOAT,
     TERROR,
+    TLINE,
     TLONGIDENT,
     TILLIDENT,
     TOVERFLOW

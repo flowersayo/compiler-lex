@@ -2,19 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tn.h"
-extern char* yytext;
+extern char *yytext;
 extern int linenum;
 
-void reporterror(enum tnumber tn) {
-	switch (tn) {
-	case TLONGIDENT:
-		printf("%-15d %-20s %-15s %s - identifier too long\n", linenum, "Error", " ", yytext);
-		break;
-	case TILLIDENT:
-		printf("%-15d %-20s %-15s %s is illegal identifier\n", linenum, "Error", " ", yytext);
-		break;
-	case TOVERFLOW:
-		printf("%-15s %-20s Symbol table overflow - cannot save %s", "Error", " ", yytext);
-		break;
-	}
+// 에러 타입 별 메시지
+const char *ERR_TOO_LONG_IDENT = "ERROR!! llegal identifier";
+const char *ERR_SYMBOLTABLE_OVERFFLOW = "ERROR!! Symbol table overflow";
+const char *ERR_ILLEGAL_IDENTIFIER = "ERROR!! illegal identifier";
+
+void reporterror(char *err_msg)
+{
+	printf(err_msg);
 }
