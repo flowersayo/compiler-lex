@@ -63,10 +63,8 @@ void main()
       case TASSIGN:
       case TINTEGER:
       case TFLOAT:
-         symtable(yytext, tn);
-         printf("%s: %s\n", get_type(tn), yytext); // print token
+         // print_token();
          break;
-
       case TIDENT: // 식별자일경우 길이 체크
 
          if (yyleng > MAXIDENTLEN) // 지정된 길이를 넘어가면
@@ -76,8 +74,7 @@ void main()
          {
             symtable(yytext, tn);
          }
-         // sym table에 토큰 넣기
-         printf("%s: %s\n", get_type(tn), yytext); // print token
+         // print_token();
          break;
 
       case TLINE:
@@ -96,6 +93,6 @@ void print_header()
    printf("====================================");
 }
 
-void print_token(int line_num, Tnumber tn, int string_pool_idx, char *token)
+void print_token(Tnumber tn, int string_pool_idx, char *token) // line num 은 전역 변수로 저장
 {
 }
