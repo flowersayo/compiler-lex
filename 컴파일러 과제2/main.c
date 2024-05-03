@@ -3,6 +3,8 @@
 #include "tn.h";
 extern yylex();
 extern char *yytext;
+extern int linenum;
+extern int yyleng;
 
 void main()
 {
@@ -31,9 +33,7 @@ void main()
       case TDIVASSIGN : printf("TDIVASSIGN %16s\n", yytext); break;
       case TMODASSIGN : printf("TMODASSIGN %16s\n", yytext); break;
       case TIDENT : printf("TIDENT %16s\n", yytext); break;
-      case TNUMBER : printf("TNUMBER %18s\n", yytext); break;
-      case TERROR : break;
-   }
+      }
    }
 }
 
