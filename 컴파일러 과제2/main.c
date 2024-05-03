@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "tn.h";
-extern yylex();
+#include "tn.h"
+#include "symtable.c"
+
+extern yylex(); // lex.yy.c 에 정의된 외부 변수를 가져옴
 extern char *yytext;
 extern int linenum;
 extern int yyleng;
@@ -10,34 +12,59 @@ void main()
 {
    enum tnumber tn; // token number
 
-   while ((tn = yylex()) != TEOF){
-      switch (tn) {
-      case TCONST : printf("TCONST %22s\n", yytext); break;
-      case TELSE : printf("TELSE %22s\n", yytext); break;
-      case TIF : printf("TIF %22s\n", yytext); break;
-      case TINT : printf("TINT %22s\n", yytext); break;
-      case TRETURN : printf("TRETURN %22s\n", yytext); break;
-      case TVOID : printf("TVOID %22s\n", yytext); break;
-      case TWHILE : printf("TWHILE %22s\n", yytext); break;
-      case TEQUAL : printf("TEQUAL %19s\n", yytext); break;
-      case TNOTEQU : printf("TNOTEQU %19s\n", yytext); break;
-      case TLESSE : printf("TLESSE %19s\n", yytext); break;
-      case TGREATE : printf("TGREATE %19s\n", yytext); break;
-      case TAND : printf("TAND %21s\n", yytext); break;
-      case TOR : printf("TOR %21s\n", yytext); break;
-      case TINC : printf("TCONST %21s\n", yytext); break;
-      case TDEC : printf("TDEC %21s\n", yytext); break;
-      case TADDASSIGN : printf("TADDASSIGN %16s\n", yytext); break;
-      case TSUBASSIGN : printf("TSUBASSIGN %16s\n", yytext); break;
-      case TMULASSIGN : printf("TMULASSIGN %16s\n", yytext); break;
-      case TDIVASSIGN : printf("TDIVASSIGN %16s\n", yytext); break;
-      case TMODASSIGN : printf("TMODASSIGN %16s\n", yytext); break;
-      case TIDENT : printf("TIDENT %16s\n", yytext); break;
+   while ((tn = yylex()) != TEOF)
+   {
+      switch (tn)
+      {
+      case TEOF:
+      case TCONST:
+      case TELSE:
+      case TIF:
+      case TINT:
+      case TRETURN:
+      case TVOID:
+      case TWHILE:
+      case TEQUAL:
+      case TNOTEQU:
+      case TLESSE:
+      case TGREATE:
+      case TAND:
+      case TOR:
+      case TINC:
+      case TDEC:
+      case TADDASSIGN:
+      case TSUBASSIGN:
+      case TMULASSIGN:
+      case TDIVASSIGN:
+      case TMODASSIGN:
+      case TEXCLAM:
+      case TMOD:
+      case TLPAREN:
+      case TRPAREN:
+      case TSTAR:
+      case TPLUS:
+      case TCOMMA:
+      case TMINUS:
+      case TDIV:
+      case TSEMICOLON:
+      case TLESS:
+      case TEQUALS:
+      case TGREATER:
+      case TLBRACKET:
+      case TRBRACKET:
+      case TLBRACE:
+      case TRBRACE:
+      case TASSIGN:
+      case TIDENT:
+      case TINTEGER:
+      case TFLOAT:
+         symtable(yytext, tn);                     // sym table에 토큰 넣기
+         printf("%s: %s\n", get_type(tn), yytext); // print token
+         break;
+      case TERROR:
+         printf("err! invalid identifier %s", yytext);
       }
    }
-}
 
-
-void printtoken(){
-
+   // print_sym_table();
 }

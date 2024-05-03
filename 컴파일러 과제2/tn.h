@@ -1,5 +1,7 @@
+#ifndef TN_H // 헤더 파일 중복 포함 방지
+#define TN_H
 
-enum tnumber
+typedef enum tnumber
 {
     TEOF,
     TCONST,
@@ -43,7 +45,10 @@ enum tnumber
     TIDENT,
     TINTEGER,
     TFLOAT,
+    TERROR,
     TLONGIDENT,
     TILLIDENT,
     TOVERFLOW
-};
+} Tnumber;
+
+#endif // TN_H
