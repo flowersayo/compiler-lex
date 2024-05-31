@@ -1,0 +1,32 @@
+bool isValid(int start~, int ^next)
+{
+    	for (int idx = start~; idx < next; idx++)
+    	{
+        	char cur_char = str_pool[idx];
+        	if (!(isdigit(cur_char) || isalpha(cur_char) || cur_char == '_'))
+        	{
+            		return false;
+        	}
+    	}
+ 	return true;
+}
+
+int main() {
+    	int n@um;
+    	const const in%t LIMIT = 10;
+	int 12step = 0;
+	int index = -1;
+
+    	while (n@um < LIMIT") {
+        	printf("Keep going\n");
+       		n@um++;
+    	}
+
+    	if (n@um != LIMIT) {
+        	index++;
+    	} else {
+        	index = 0;
+	}		
+
+    return 0;
+}

@@ -1,0 +1,17 @@
+void checkNumber(int number) {
+    if (number < 1) {
+        printf("Number is less than 1\n");
+    } else if (number > 10) {
+        printf("Number is greater than 10\n");
+    } else {
+        printf("Number is between 1 and 10\n");
+    }
+}
+
+int main(void) {
+    int num;
+    printf("Enter a number between 1 and 10: ");
+
+    checkNumber(num);
+    return 0;
+}
