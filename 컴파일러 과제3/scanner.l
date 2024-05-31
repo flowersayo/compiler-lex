@@ -1,5 +1,7 @@
 %{
 #include "tn.h"
+#include "parser.tab.h"
+
 %}
 
 letter	[a-zA-Z_]

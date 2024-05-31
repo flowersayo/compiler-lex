@@ -5,6 +5,7 @@
 #include "sym_table_lab.h"
 #include "hash_func.h"
 #include "tn.h"
+#include "parser.tab.h"
 
 char separators[] = " ,;\t\n\r\n";
 char str_pool[MAX_STR_POOL];

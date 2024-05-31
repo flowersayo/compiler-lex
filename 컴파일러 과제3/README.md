@@ -1,17 +1,18 @@
-# 컴파일
-
 1. flex 명령어로 lex.yy.c 파일 생성하기
    $ flex scanner.l
 
-2. gcc 명령어로 {이름} 파일 생성하기
-   $ gcc lex.yy.c main.c -o {이름} -ll
+2. bison 명령어로 parser.tab.h parser.tab.c 생성하기
+   $ bison -d cal.y %-d 를 주면 공통된 토큰을 포함한 헤더 파일을 아웃풋으로 산출 할수 있음
 
-https://velog.io/@sukyeongs/Mac-M1-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C-Flex-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0-ft.-%EC%BB%B4%ED%8C%8C%EC%9D%BC%EB%9F%AC-Lex
+3. 컴파일
+   gcc main.c parser.tab.h parser.tab.c hash_func.h hash_func.c sym_table_lab.h sym_table_lab.c tn.h reporterror.c
+   // lex.yy.c 는 이미 parser.y 에 include 되어있으므로 포함하지 않을 것.
 
-3. a.out 파일에 데이터 넣기
+---
 
-> $ ./a.out < testdata1.dat
+# MAC
 
-##
-
-- yyleng 출력할 때 %c 대신 %zu 사용
+- lex.yy.c 컴파일 된 결과의 #include <malloc.h> -> #include <stdlib> 로 바꾸어야함 (malloc.h 지원x)
+- parser.tab.c 컴파일 된 결과의 #include <malloc.h> -> #include <stdlib> 로 바꾸어야함 (malloc.h 지원x)
+- sym_table_lab.c 의 148번째 줄의 strcpy_s -> strncpy 로 변경
+- reporterror.c 의 strcpy_s -> strncpy 로 변경

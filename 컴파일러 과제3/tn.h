@@ -5,36 +5,76 @@
 #define FALSE 0
 #define TRUE 1
 
-#define MAX_LEN		12
-
-enum tokentypes {
+#define MAX_LEN 12
+/*
+enum tokentypes
+{
 	TEOF,
-	TERROR, TCOMMENT, TNUMBER, TFNUMBER, TIDENT,
-	TCONST, TELSE, TIF, TINT, TFLOAT, TRETURN, TVOID, TWHILE,
-	TADD, TSUB, TMUL, TDIV, TMOD,
-	TASSIGN, TADDASSIGN, TSUBASSIGN, TMULASSIGN, TDIVASSIGN, TMODASSIGN,
-	TNOT, TAND, TOR,
-	TEQUAL, TNOTEQU, TLESS, TLESSE, TGREAT, TGREATE,
-	TINC, TDEC,
-	TLPAREN, TRPAREN, TCOMMA, TLBRACE, TRBRACE, TLBRACKET, TRBRACKET, TSEMI
+	TERROR,
+	TCOMMENT,
+	TNUMBER,
+	TFNUMBER,
+	TIDENT,
+	TCONST,
+	TELSE,
+	TIF,
+	TINT,
+	TFLOAT,
+	TRETURN,
+	TVOID,
+	TWHILE,
+	TADD,
+	TSUB,
+	TMUL,
+	TDIV,
+	TMOD,
+	TASSIGN,
+	TADDASSIGN,
+	TSUBASSIGN,
+	TMULASSIGN,
+	TDIVASSIGN,
+	TMODASSIGN,
+	TNOT,
+	TAND,
+	TOR,
+	TEQUAL,
+	TNOTEQU,
+	TLESS,
+	TLESSE,
+	TGREAT,
+	TGREATE,
+	TINC,
+	TDEC,
+	TLPAREN,
+	TRPAREN,
+	TCOMMA,
+	TLBRACE,
+	TRBRACE,
+	TLBRACKET,
+	TRBRACKET,
+	TSEMI
 };
-enum errorTypes { noerror, illid_digit, illid_long, illch, real_num, overst};
+*/
+enum errorTypes
+{
+	noerror,
+	illid_digit,
+	illid_long,
+	illch,
+	real_num,
+	overst
+};
 typedef enum errorTypes ERRORtypes;
 
 extern int lineNumber;
-extern int startLineNumber;//ÁÖ¼®Ã³¸®½Ã ½ÃÀÛ lineNumber¸¦ ÀúÀåÇÏ´Â º¯¼ö
+extern int startLineNumber; // ï¿½Ö¼ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ lineNumberï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
 extern char error_message[];
 
-//lex °ü·Ã º¯¼ö
-extern char* yytext;
-extern int yyleng;
+// lex ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+extern char *yytext;
+// extern int yyleng;
 extern int yylex();
 
-//¿ÜºÎ ÇÔ¼ö ¼±¾ð
-extern void SymbolTable(char*, int);
+// ï¿½Üºï¿½ ï¿½Ô¼ï¿½ ï¿½ï¿½ï¿½ï¿½
+extern void SymbolTable(char *, int);
 extern void ReportError(ERRORtypes err);
-
-
-
-
-

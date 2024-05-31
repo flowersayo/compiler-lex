@@ -1,8 +1,11 @@
 const int max=100;
-void main()
+void write(int);
+
+float main()
 {
 	int i,j,k;
 	int rem, prime;   // rem:remainder
+	float result = 1.0;
 
 	i=2;
 	while(i<=max) {
@@ -11,10 +14,11 @@ void main()
 		j=2;
 		while(j<=k){
 			rem=i%j;
-			if(rem==0) prime=0; endif; 
+			if(rem==0) prime=0; 
 			++j;
 		}
-		if(prime==1) write(i); endif; 
+		if(prime==1) write(i); 
 		++i;
 	}
+	return result;
 }
