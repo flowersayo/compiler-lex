@@ -2,6 +2,7 @@
 #include "tn.h"
 #include "parser.tab.h"
 
+
 %}
 
 letter	[a-zA-Z_]
@@ -53,11 +54,11 @@ digit	[0-9]
                                         			if(yytext[i] == '\n')
                                             			lineNumber++;
                                     			}
-                                    			return(TCOMMENT);
+                                    			// return(TCOMMENT);
                                 		} 
 "//".*                          		{
                                     			startLineNumber = lineNumber; 
-                                    			return(TCOMMENT);
+                                    			// return(TCOMMENT);
                                 		}
 {letter}({letter}|{digit})*			{
     							if(yyleng >= 15)
