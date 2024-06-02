@@ -34,6 +34,7 @@ dcl_specifier			    : type_qualifier							{ semantic(11); }
 							| type_specifier							{ semantic(12); };					
 type_qualifier		    	: TCONST									{ semantic(13); };
 type_specifier			    : TINT										{ semantic(14); }
+							| TFLOAT									{ printf("type_specifier->float\n")};
 							| TVOID										{ semantic(15); };
 function_name		        : TIDENT									{ semantic(16); };	
 abbreviated_param 			: TLPAREN dcl_spec_list TRPAREN				{ printf("abbreviated_param\n"); };						
@@ -57,6 +58,7 @@ init_dcl_list				: init_declarator							{ semantic(29); }
 							| init_dcl_list TCOMMA init_declarator		{ semantic(30); };
 init_declarator			    : declarator								{ semantic(31); }
 							| declarator TASSIGN TNUMBER				{ semantic(32); };
+
 declarator				    : TIDENT										{ semantic(33); }
 							| TIDENT TLBRACKET opt_number TRBRACKET		{ semantic(34); };
 opt_number				    : TNUMBER									{ semantic(35); }
