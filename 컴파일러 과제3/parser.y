@@ -57,9 +57,9 @@ dcl_spec_list 				: dcl_spec | dcl_spec_list TCOMMA dcl_spec  { printf("dcl_spec
 init_dcl_list				: init_declarator							{ semantic(29); }
 							| init_dcl_list TCOMMA init_declarator		{ semantic(30); };
 init_declarator			    : declarator								{ semantic(31); }
-							| declarator TASSIGN TNUMBER				{ semantic(32); };
-
-declarator				    : TIDENT										{ semantic(33); }
+							| declarator TASSIGN TNUMBER				{ semantic(32); }
+							| declarator TASSIGN TFNUMBER				{ printf("init_declarator->declarator TASSIGN TFNUMBER\n")};
+declarator				    : TIDENT									{ semantic(33); }
 							| TIDENT TLBRACKET opt_number TRBRACKET		{ semantic(34); };
 opt_number				    : TNUMBER									{ semantic(35); }
 							|											{ semantic(36); };
