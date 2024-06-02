@@ -8,10 +8,10 @@ void ReportError(ERRORtypes err)
 	switch (err)
 	{
 	case overst:
-		strncpy(error_message, MAX_ERROR_MSG, "overflow");
+		strncpy(error_message, "overflow", MAX_ERROR_MSG);
 		break;
 	case illid_long:
-		strncpy(error_message, MAX_ERROR_MSG, "too long identifier");
+		strncpy(error_message, "too long identifier", MAX_ERROR_MSG);
 		break;
 	case illch:
 		snprintf(error_message, MAX_ERROR_MSG, "%s illegal character", yytext); // 허용되지 않은 문자가 들어올 경우 에러 발생
@@ -20,7 +20,7 @@ void ReportError(ERRORtypes err)
 		snprintf(error_message, MAX_ERROR_MSG, "%s start with digit", yytext);
 		break;
 	case real_num:
-		strncpy(error_message, MAX_ERROR_MSG, "real number is not allowed");
+		strncpy(error_message, "real number is not allowed", MAX_ERROR_MSG);
 		// 실수가 들어올 경우 에러 발생. Floating Point 경우는 제외하였음.
 	}
 }

@@ -145,7 +145,7 @@ void SymbolTable(char *ident, int len)
             exit(0);
         }
 
-        strncpy(str_pool + str_pool_index, MAX_STR_POOL, ident); // string pool 에 iden
+        strncpy(str_pool + str_pool_index, ident, MAX_STR_POOL); // string pool 에 iden
 
         add_hash_table(sym_table_index, hash_value);
 
