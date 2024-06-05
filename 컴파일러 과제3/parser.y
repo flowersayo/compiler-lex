@@ -31,12 +31,16 @@ dcl_spec					: dcl_specifiers							{ semantic(8); };
 dcl_specifiers			    : dcl_specifier								{ semantic(9); }
 							| dcl_specifiers dcl_specifier				{ semantic(10); };
 dcl_specifier			    : type_qualifier							{ semantic(11); }
-							| type_specifier							{ semantic(12); };
+							| type_specifier							{ semantic(12); };					
 type_qualifier		    	: TCONST									{ semantic(13); };
 type_specifier			    : TINT										{ semantic(14); }
+							| TFLOAT									{ printf("type_specifier->float\n")};
 							| TVOID										{ semantic(15); };
 function_name		        : TIDENT									{ semantic(16); };	
-unformal_param 				: TLPAREN dcl_spec TRPAREN					{ printf("unformal_param"); };	
+
+abbreviated_param 			: TLPAREN dcl_spec_list TRPAREN				{ printf("abbreviated_param\n"); };						
+formal_param		    	: TLPAREN opt_formal_param TRPAREN			{ semantic(17); };
+
 opt_formal_param 	        : formal_param_list							{ semantic(18); }
 							|											{ semantic(19); };
 formal_param_list       	: param_dcl									{ semantic(20); }
@@ -47,12 +51,18 @@ opt_dcl_list				: declaration_list							{ semantic(24); }
 							|		 									{ semantic(25); };
 declaration_list		    : declaration								{ semantic(26); }
 							| declaration_list declaration				{ semantic(27); };
-declaration				    : dcl_spec init_dcl_list TSEMI				{ semantic(28); };
 
+declaration				    : dcl_spec init_dcl_list TSEMI
+							| function_declaration					    { semantic(28); };
+declaration_param 			: abbreviated_param | formal_param			{ printf("declaration_param")};
+function_declaration		: dcl_spec function_name declaration_param TSEMI {printf("function_declaration\n")};
+dcl_spec_list 				: dcl_spec | dcl_spec_list TCOMMA dcl_spec  { printf("dcl_spec_list")};
 init_dcl_list				: init_declarator							{ semantic(29); }
 							| init_dcl_list TCOMMA init_declarator		{ semantic(30); };
 init_declarator			    : declarator								{ semantic(31); }
-							| declarator TASSIGN TNUMBER				{ semantic(32); };
+							| declarator TASSIGN TNUMBER				{ semantic(32); }
+							| declarator TASSIGN TFNUMBER				{ printf("init_declarator->declarator TASSIGN TFNUMBER\n")};
+
 declarator				    : TIDENT									{ semantic(33); }
 							| TIDENT TLBRACKET opt_number TRBRACKET		{ semantic(34); };
 opt_number				    : TNUMBER									{ semantic(35); }
