@@ -2,11 +2,14 @@
    $ flex scanner.l
 
 2. bison 명령어로 parser.tab.h parser.tab.c 생성하기
-   $ bison -d cal.y %-d 를 주면 공통된 토큰을 포함한 헤더 파일을 아웃풋으로 산출 할수 있음
+   $ bison -d parser.y %-d 를 주면 공통된 토큰을 포함한 헤더 파일을 아웃풋으로 산출 할수 있음
 
 3. 컴파일
    gcc main.c parser.tab.h parser.tab.c hash_func.h hash_func.c sym_table_lab.h sym_table_lab.c tn.h reporterror.c
    // lex.yy.c 는 이미 parser.y 에 include 되어있으므로 포함하지 않을 것.
+
+4. 결과 파일 넣기
+   ./a.out < input_noerror.mc
 
 ---
 

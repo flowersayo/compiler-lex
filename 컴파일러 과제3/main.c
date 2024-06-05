@@ -8,6 +8,7 @@ int lineNumber = 1;		 // 코드 lineNumber를 담는 변수
 int startLineNumber = 0; // 주석 처리시 주석 시작 lineNumber를 담는 변수
 
 extern yyparse();
+extern yylex();
 
 // error 관련 변수
 ERRORtypes err = noerror; // 에러 타입을 담는 변수
@@ -124,6 +125,7 @@ void printToken(enum yytokentype tn)
 	switch (tn)
 	{
 	case TCOMMENT:
+		printf("%-20d %-20s %-20s\n", lineNumber, "TCOMMENT", yytext);
 		break;
 	case TIDENT:
 	{
@@ -150,12 +152,13 @@ void main()
 	init_sym_table();
 
 	PrintHeading();
-
-	while ((tn = yylex()) != 0)
-	{
-		// Token 출력
-		printToken(tn);
-	}
+	/*
+		while ((tn = yylex()) != 0)
+		{
+			// Token 출력
+			printToken(tn);
+		}
+		*/
 
 	printf("start of parser\n");
 	yyparse();
