@@ -147,7 +147,7 @@ void printToken(enum yytokentype tn)
 // Token 인식하여 Token 및 에러 출력
 void main()
 {
-	enum yytokentype tn;
+	// int tn;
 
 	init_sym_table();
 
