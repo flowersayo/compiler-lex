@@ -8,6 +8,8 @@
 void semantic(int);
 void yyerror(char *);
 
+int total_err_cnt = 0;
+
 %}
 
 %token TEOF TERROR TCOMMENT
