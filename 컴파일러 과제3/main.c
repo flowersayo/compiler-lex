@@ -1,5 +1,5 @@
 #include "tn.h"
-#include "parser.tab.h"
+#include "parser_tab.h"
 #include "sym_table_lab.h"
 #include "hash_func.h"
 
@@ -7,8 +7,9 @@
 int lineNumber = 1;		 // 코드 lineNumber를 담는 변수
 int startLineNumber = 0; // 주석 처리시 주석 시작 lineNumber를 담는 변수
 
-extern yyparse();
-extern yylex();
+extern int yyparse();
+extern int yylex();
+extern int total_err_cnt;
 
 // error 관련 변수
 ERRORtypes err = noerror; // 에러 타입을 담는 변수
@@ -120,7 +121,7 @@ const char *str_tokentypes[] = {
 	[LOWER_THAN_ELSE -
 		BASE_IDX] = "LOWER_THAN_ELSE"};
 
-void printToken(enum yytokentype tn)
+void printToken(int tn)
 {
 	switch (tn)
 	{
@@ -160,9 +161,11 @@ void main()
 		}
 		*/
 
-	printf("start of parser\n");
+	printf("***MiniC parsing begins \n");
 	yyparse();
-	printf("end of parser\n");
+	printf("Parsing ends.***\n");
+
+	printf("%d error(s) detected ", total_err_cnt);
 
 	print_sym_table();
 	print_hash_table();

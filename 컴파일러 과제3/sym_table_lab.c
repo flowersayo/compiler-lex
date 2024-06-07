@@ -5,41 +5,90 @@
 #include "sym_table_lab.h"
 #include "hash_func.h"
 #include "tn.h"
-#include "parser.tab.h"
+#include "parser_tab.h"
 
 char separators[] = " ,;\t\n\r\n";
 char str_pool[MAX_STR_POOL];
-// sym_table 구조
-// StringPoolIndex | Length | Line ( 과제 3에서는 Type 까지 저장! )
 
-int sym_table[SYM_TABLE_SIZE][3];
+// sym_table 구조
+typedef struct symbol
+{
+
+    Kind kind;              // ident 의 유형
+    Type type;              // 변수일 경우 변수 타입, 함수일 경우 리턴 타입
+    int params[MAX_PARAMS]; // 함수일경우 파라미터 목록 저장 (sym table 의 idx)
+    int param_cnt;
+    int st_idx; // stringpool index
+    int length;
+    int line;
+} Symbol;
 
 #define isLetter(x) (((x) >= 'a' && (x) <= 'z') || ((x) >= 'A' && (x) <= 'Z') || ((x) == '_'))
 #define isDigit(x) ((x) >= '0' && (x) <= '9')
 
 HTpointer HT[HASH_TABLE_SIZE];
+Symbol *sym_table[SYM_TABLE_SIZE]; // 메모리 동적 할당
+
+const char *str_var_types[TYPE_COUNT] = {
+    "none",
+    "int",
+    "float",
+    "char",
+    "double",
+    "void",
+    "type_cnt"};
+
+const char *str_kind[KIND_COUNT] = {
+    "none",
+    "scalar",
+    "array",
+    "func",
+    "argument",
+};
+
+// Function to get the enum value from the string
+int get_type_from_str(const char *type_str)
+{
+    for (int i = 0; i < TYPE_COUNT; i++)
+    {
+        if (strcmp(type_str, str_var_types[i]) == 0)
+        {
+            return i;
+        }
+    }
+    return -1; // Return an invalid type
+}
 
 void init_sym_table()
 {
-    int i;
-    for (i = 0; i < SYM_TABLE_SIZE; i++)
+    for (int i = 0; i < SYM_TABLE_SIZE; i++)
     {
-        sym_table[i][0] = -1;
-        sym_table[i][1] = -1;
+        sym_table[i] = NULL;
     }
 }
 
 void print_sym_table()
 {
-    int i;
+
     printf("\nSymbol Table\n");
-    printf("Index\tStrPool\tLength\tLine\tSymbol\n");
-    for (i = 0; i < SYM_TABLE_SIZE; i++)
+    printf("Index\tSTidx\tLength\tSymbol\tKind\tType\tLine\n");
+
+    for (int i = 0; i < SYM_TABLE_SIZE; i++)
     {
-        if (sym_table[i][0] != -1)
+
+        if (sym_table[i] == NULL)
         {
-            printf("[%d]\t%d\t%d\t%d\t%s\n", i, sym_table[i][0], sym_table[i][1], sym_table[i][2], str_pool + sym_table[i][0]);
+            break;
         }
+
+        printf("[%d]\t%d\t%d\t%s\t%s\t%s\t%d\n",
+               i,
+               sym_table[i]->st_idx,
+               sym_table[i]->length,
+               str_pool + sym_table[i]->st_idx,
+               str_kind[sym_table[i]->kind],
+               str_var_types[sym_table[i]->type],
+               sym_table[i]->line);
     }
 }
 
@@ -50,7 +99,7 @@ HTpointer lookup_hash_table(char *sym, int hscode)
     // ü�̴׵� ����Ʈ�� Ž��
     while (entry != NULL)
     {
-        if (strcmp(str_pool + (sym_table[entry->index][0]), sym) == 0)
+        if (strcmp(str_pool + (sym_table[entry->index]->st_idx), sym) == 0)
         {
             return entry; // ã�� �׸� ��ȯ
         }
@@ -145,17 +194,79 @@ void SymbolTable(char *ident, int len)
             exit(0);
         }
 
-        strncpy(str_pool + str_pool_index, ident, MAX_STR_POOL); // string pool 에 iden
+        strncpy(str_pool + str_pool_index, ident, len); // string pool 에 iden
 
         add_hash_table(sym_table_index, hash_value);
 
-        // 2차원 배열 형태로 sym table 구성 -> string pool index, length, line_number
+        sym_table[sym_table_index] = malloc(sizeof(Symbol)); // 동적할당
 
-        sym_table[sym_table_index][0] = str_pool_index;
-        sym_table[sym_table_index][1] = len;
-        sym_table[sym_table_index++][2] = lineNumber;
+        if (sym_table[sym_table_index] == NULL)
+        {
+            printf("Memory allocation failed\n");
+            exit(1);
+        }
+        sym_table[sym_table_index]->kind = NONE;
+        sym_table[sym_table_index]->type = NONE_TYPE;
+        sym_table[sym_table_index]->st_idx = str_pool_index;
+        sym_table[sym_table_index]->length = len;
+        sym_table[sym_table_index]->param_cnt = 0;
+
+        sym_table[sym_table_index++]
+            ->line = lineNumber;
 
         str_pool[str_pool_index + len] = '\0';
         str_pool_index += len + 1;
+    }
+}
+
+void update_symbol_kind(char *ident, Kind kind)
+{
+
+    printf("%s %d", ident, kind);
+
+    int hash_value = divisionMethod(ident, HASH_TABLE_SIZE);
+
+    HTpointer htp = lookup_hash_table(ident, hash_value);
+
+    if (htp != NULL)
+    {
+        sym_table[htp->index]->kind = kind;
+    }
+}
+
+void update_symbol_type(char *ident, Type type)
+{
+
+    int hash_value = divisionMethod(ident, HASH_TABLE_SIZE);
+
+    HTpointer htp = lookup_hash_table(ident, hash_value);
+
+    if (htp != NULL)
+    {
+
+        sym_table[htp->index]->type = type;
+    }
+}
+
+void update_function_param(char *func_name, Type type, char *param)
+{
+
+    int func_hash_value = divisionMethod(func_name, HASH_TABLE_SIZE);
+
+    HTpointer func_htp = lookup_hash_table(func_name, func_hash_value);
+
+    if (func_htp != NULL)
+    {
+
+        int idx = sym_table[func_htp->index]->param_cnt;
+
+        int param_hash_value = divisionMethod(param, HASH_TABLE_SIZE);
+        HTpointer param_htp = lookup_hash_table(func_name, func_hash_value);
+
+        if (param_htp != NULL)
+        {
+            int idx = sym_table[param_htp->index]->param_cnt;
+            sym_table[param_htp->index]->params[idx] = param_htp->index; // sym table idx 저장
+        }
     }
 }

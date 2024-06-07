@@ -3,10 +3,15 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include "lex.yy.c"			/* #include "lex.yy.c" */
+#include "sym_table_lab.h"
 
 /*yacc source for Mini C */
 void semantic(int);
 void yyerror(char *);
+
+char * current_func_name ; // 현재 실행 중인 함수 이름
+int total_err_cnt = 0 ;
+Type current_type = NONE_TYPE; // 현재 활성화된 변수 선언 타입
 
 %}
 
@@ -17,8 +22,31 @@ void yyerror(char *);
 %token TNOT TAND TOR TEQUAL TNOTEQU TLESS TLESSE TGREAT TGREATE TINC TDEC 
 %token TLPAREN TRPAREN TRBRACE TLBRACKET TRBRACKET TSEMI TCOMMA TLBRACE
 
+%union{
+ 	int ival;
+    float fval;
+    char *sval;
+    int type;
+}
+
+
 %nonassoc LOWER_THAN_ELSE
 %nonassoc TELSE
+
+
+
+%type <type> type_specifier
+%type <type> dcl_specifiers
+%type <type> dcl_specifier
+%type <type> dcl_spec
+
+
+%token <sval> TIDENT
+%type <sval> declarator
+%type <sval> init_dcl_list
+%type <sval> init_declarator
+
+
 %%
 mini_c						: translation_unit							{ semantic(1); };
 translation_unit	    	: external_dcl								{ semantic(2); }
@@ -33,9 +61,9 @@ dcl_specifiers			    : dcl_specifier								{ semantic(9); }
 dcl_specifier			    : type_qualifier							{ semantic(11); }
 							| type_specifier							{ semantic(12); };					
 type_qualifier		    	: TCONST									{ semantic(13); };
-type_specifier			    : TINT										{ semantic(14); }
-							| TFLOAT									{ printf("type_specifier->float\n")};
-							| TVOID										{ semantic(15); };
+type_specifier			    : TINT										{ current_type = INT_TYPE; semantic(14); }
+							| TFLOAT									{ current_type = FLOAT_TYPE; printf("type_specifier->float\n")};
+							| TVOID										{ current_type = VOID_TYPE;  semantic(15); };
 function_name		        : TIDENT									{ semantic(16); };	
 
 abbreviated_param 			: TLPAREN dcl_spec_list TRPAREN				{ printf("abbreviated_param\n"); };						
@@ -45,26 +73,28 @@ opt_formal_param 	        : formal_param_list							{ semantic(18); }
 							|											{ semantic(19); };
 formal_param_list       	: param_dcl									{ semantic(20); }
 							| formal_param_list TCOMMA param_dcl		{ semantic(21); };
-param_dcl				    : dcl_spec declarator 		    { semantic(22); };
+param_dcl				    : dcl_spec declarator 		    			{ semantic(22); };
 compound_st		        	: TLBRACE opt_dcl_list opt_stat_list TRBRACE { semantic(23); };
 opt_dcl_list				: declaration_list							{ semantic(24); }
 							|		 									{ semantic(25); };
 declaration_list		    : declaration								{ semantic(26); }
 							| declaration_list declaration				{ semantic(27); };
 
-declaration				    : dcl_spec init_dcl_list TSEMI
+declaration				    : dcl_spec init_dcl_list TSEMI				{ current_type = NONE_TYPE; }
 							| function_declaration					    { semantic(28); };
-declaration_param 			: abbreviated_param | formal_param			{ printf("declaration_param")};
-function_declaration		: dcl_spec function_name declaration_param TSEMI {printf("function_declaration\n")};
-dcl_spec_list 				: dcl_spec | dcl_spec_list TCOMMA dcl_spec  { printf("dcl_spec_list")};
+declaration_param 			: abbreviated_param | formal_param			;
+function_declaration		: dcl_spec function_name declaration_param TSEMI ;
+dcl_spec_list 				: dcl_spec | dcl_spec_list TCOMMA dcl_spec  ;
 init_dcl_list				: init_declarator							{ semantic(29); }
 							| init_dcl_list TCOMMA init_declarator		{ semantic(30); };
-init_declarator			    : declarator								{ semantic(31); }
-							| declarator TASSIGN TNUMBER				{ semantic(32); }
-							| declarator TASSIGN TFNUMBER				{ printf("init_declarator->declarator TASSIGN TFNUMBER\n")};
+init_declarator			    : declarator								{ update_symbol_type($1, current_type); semantic(31); }
+							| declarator TASSIGN TNUMBER				{ if(current_type != INT_TYPE){  printf("line: %d,[ERROR!] Type Mismatched. Expected int but float.");  total_err_cnt++; }
+																			else{update_symbol_type($1, current_type); } }
+							| declarator TASSIGN TFNUMBER				{ if(current_type != FLOAT_TYPE){ printf("line: %d, [ERROR!] Type Mismatched. Expected float but int."); total_err_cnt++; } 
+																			else{update_symbol_type($1, current_type); }  };
 
-declarator				    : TIDENT									{ semantic(33); }
-							| TIDENT TLBRACKET opt_number TRBRACKET		{ semantic(34); };
+declarator				    : TIDENT									{  update_symbol_kind($1,SCALAR); semantic(33); }
+							| TIDENT TLBRACKET opt_number TRBRACKET		{  update_symbol_kind($1,ARRAY); semantic(34); };
 opt_number				    : TNUMBER									{ semantic(35); }
 							|											{ semantic(36); };
 opt_stat_list				: statement_list							{ semantic(37); }

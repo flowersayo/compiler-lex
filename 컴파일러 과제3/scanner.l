@@ -1,7 +1,7 @@
 %{
 #include "tn.h"
-#include "parser.tab.h"
-
+#include "parser_tab.h"
+#include "sym_table_lab.h"
 
 %}
 
@@ -66,11 +66,13 @@ digit	[0-9]
     								ReportError(illid_long);
     								return(TERROR);
     							}
+								yylval.sval = strdup(yytext);
     							SymbolTable(yytext, yyleng);
     							return(TIDENT);
 						}
-[+|-]?([1-9][0-9]*|0([0-7]+|(x|X)[0-9A-Fa-f]+)?)	return(TNUMBER); //정수 상수
-{digit}+"."{digit}+(e[+-]?{digit}+)?		return(TFNUMBER); //실수 상수
+[+|-]?([1-9][0-9]*|0([0-7]+|(x|X)[0-9A-Fa-f]+)?)	{ yylval.ival = atoi(yytext); return(TNUMBER); }  //정수 상수
+{digit}+"."{digit}+(e[+-]?{digit}+)?		{ yylval.fval = atof(yytext); return(TFNUMBER);  } //실수 상수
+
 {digit}+[A-Za-z0-9_]+			{
 							ReportError(illid_digit); 
 							return(TERROR);
@@ -83,7 +85,10 @@ digit	[0-9]
 						} 
 %%
 
+
+
 int yywrap()
 {
 	return 1;
 }
+

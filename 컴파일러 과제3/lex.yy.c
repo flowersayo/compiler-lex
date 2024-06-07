@@ -524,8 +524,8 @@ char *yytext;
 #line 1 "scanner.l"
 #line 2 "scanner.l"
 #include "tn.h"
-#include "parser.tab.h"
-
+#include "parser_tab.h"
+#include "sym_table_lab.h"
 
 #line 530 "lex.yy.c"
 #line 531 "lex.yy.c"
@@ -1025,23 +1025,24 @@ YY_RULE_SETUP
     								ReportError(illid_long);
     								return(TERROR);
     							}
+								yylval.sval = strdup(yytext);
     							SymbolTable(yytext, yyleng);
     							return(TIDENT);
 						}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 72 "scanner.l"
-return(TNUMBER); //정수 상수
+#line 73 "scanner.l"
+{ yylval.ival = atoi(yytext); return(TNUMBER); }  //정수 상수
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 73 "scanner.l"
-return(TFNUMBER); //실수 상수
+#line 74 "scanner.l"
+{ yylval.fval = atof(yytext); return(TFNUMBER);  } //실수 상수
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 74 "scanner.l"
+#line 76 "scanner.l"
 {
 							ReportError(illid_digit); 
 							return(TERROR);
@@ -1050,17 +1051,17 @@ YY_RULE_SETUP
 case 45:
 /* rule 45 can match eol */
 YY_RULE_SETUP
-#line 78 "scanner.l"
+#line 80 "scanner.l"
 lineNumber++;
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 79 "scanner.l"
+#line 81 "scanner.l"
 ;
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 80 "scanner.l"
+#line 82 "scanner.l"
 { 
 							ReportError(illch);
 							return(TERROR);
@@ -1068,10 +1069,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 84 "scanner.l"
+#line 86 "scanner.l"
 ECHO;
 	YY_BREAK
-#line 1074 "lex.yy.c"
+#line 1075 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2076,11 +2077,14 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 84 "scanner.l"
+#line 86 "scanner.l"
+
+
 
 
 int yywrap()
 {
 	return 1;
 }
+
 

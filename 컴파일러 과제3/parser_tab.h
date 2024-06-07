@@ -1,6 +1,9 @@
-#ifndef YYSTYPE
-#define YYSTYPE int
-#endif
+typedef union{
+ 	int ival;
+    float fval;
+    char *sval;
+    int type;
+} YYSTYPE;
 #define	TEOF	258
 #define	TERROR	259
 #define	TCOMMENT	260
