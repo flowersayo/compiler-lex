@@ -14,9 +14,9 @@ char str_pool[MAX_STR_POOL];
 typedef struct symbol
 {
 
-    Kind kind;              // ident 의 유형
-    Type type;              // 변수일 경우 변수 타입, 함수일 경우 리턴 타입
-    int params[MAX_PARAMS]; // 함수일경우 파라미터 목록 저장 (sym table 의 idx)
+    Kind kind;               // ident 의 유형
+    Type type;               // 변수일 경우 변수 타입, 함수일 경우 리턴 타입
+    Type params[MAX_PARAMS]; // 함수일경우 파라미터 목록 저장 (sym table 의 idx)
     int param_cnt;
     int st_idx; // stringpool index
     int length;
@@ -43,7 +43,7 @@ const char *str_kind[KIND_COUNT] = {
     "scalar",
     "array",
     "func",
-    "argument",
+    "param",
 };
 
 // Function to get the enum value from the string
@@ -71,7 +71,8 @@ void print_sym_table()
 {
 
     printf("\nSymbol Table\n");
-    printf("Index\tSTidx\tLength\tSymbol\tKind\tType\tLine\n");
+    printf("%s\t%s\t%s\t%-10s\t%s\t%s\t%s\t%s\n",
+           "Index", "STidx", "Length", "Symbol", "Kind", "Type", "Line", "Params");
 
     for (int i = 0; i < SYM_TABLE_SIZE; i++)
     {
@@ -81,7 +82,7 @@ void print_sym_table()
             break;
         }
 
-        printf("[%d]\t%d\t%d\t%s\t%s\t%s\t%d\n",
+        printf("[%d]\t%d\t%d\t%-10s\t%s\t%s\t%d\t",
                i,
                sym_table[i]->st_idx,
                sym_table[i]->length,
@@ -89,6 +90,16 @@ void print_sym_table()
                str_kind[sym_table[i]->kind],
                str_var_types[sym_table[i]->type],
                sym_table[i]->line);
+
+        // 함수일 경우 매개변수 출력하기
+        int j = 0;
+        while (j < sym_table[i]->param_cnt)
+        {
+            printf("%s ", str_var_types[sym_table[i]->params[j]]);
+            j++;
+        }
+
+        printf("\n");
     }
 }
 
@@ -248,8 +259,10 @@ void update_symbol_type(char *ident, Type type)
     }
 }
 
-void update_function_param(char *func_name, Type type, char *param)
+void update_function_param(char *func_name, Type type)
 {
+
+    printf("update_function_param");
 
     int func_hash_value = divisionMethod(func_name, HASH_TABLE_SIZE);
 
@@ -258,15 +271,8 @@ void update_function_param(char *func_name, Type type, char *param)
     if (func_htp != NULL)
     {
 
-        int idx = sym_table[func_htp->index]->param_cnt;
-
-        int param_hash_value = divisionMethod(param, HASH_TABLE_SIZE);
-        HTpointer param_htp = lookup_hash_table(func_name, func_hash_value);
-
-        if (param_htp != NULL)
-        {
-            int idx = sym_table[param_htp->index]->param_cnt;
-            sym_table[param_htp->index]->params[idx] = param_htp->index; // sym table idx 저장
-        }
+        int idx = sym_table[func_htp->index]->param_cnt; // 파라미터 개수
+        sym_table[func_htp->index]->params[idx] = type;  // 함수 파라미터 하나 추가
+        sym_table[func_htp->index]->param_cnt++;         // 파라미터 개수 1 증가
     }
 }

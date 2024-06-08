@@ -35,11 +35,12 @@ typedef enum kind
     SCALAR,
     ARRAY,
     FUNC,
-    ARG,
+    PARAM,
     KIND_COUNT
 
 } Kind;
 
 void update_symbol_kind(char *ident, Kind kind);
 void update_symbol_type(char *ident, Type type);
+void update_function_param(char *func_name, Type type);
 const char *str_var_types[TYPE_COUNT];

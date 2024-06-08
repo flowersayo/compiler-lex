@@ -7,6 +7,7 @@ float main()
 	int rem, prime;   // rem:remainder
 	float result = 1.0;
 
+	
 	i=2;
 	while(i<=max) {
 		prime = 1;
@@ -20,5 +21,6 @@ float main()
 		if(prime==1) write(i); 
 		++i;
 	}
+
 	return result;
 }
