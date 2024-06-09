@@ -12,9 +12,6 @@ int main()
 
     int a = 1;
     float f = 3.0;
-    int i,j,k;
-    int i=2;
-
 
     add(3,5); // 정상 호출
     multiply(3,5);
