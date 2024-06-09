@@ -14,6 +14,9 @@ int total_err_cnt = 0 ;
 Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
 int left_brace_cnt = 0; //왼쪽 중괄호 개수
 int right_brace_cnt = 0; //오른쪽 중괄호 개수
+
+void check_brace_balance();
+
 %}
 
 %token TEOF TERROR TCOMMENT
@@ -60,10 +63,7 @@ translation_unit	    	: external_dcl								{ semantic(2); }
 							| translation_unit external_dcl			    { semantic(3); };
 external_dcl				: function_def								{ semantic(4); }
 							| declaration								{ semantic(5); };
-function_def				: function_header compound_st 	     		{ semantic(6); };
-					 | function_header TLPAREN error compound_st { yyerror("Missing closing parenthesis in function definition"); yyerrok; }
-    				         | function_header error TRPAREN compound_st { yyerror("Missing opening parenthesis in function definition"); yyerrok; }
-;
+function_def				: function_header compound_st 	     		{};
 function_header	        	: dcl_spec function_name formal_param		{ current_func = NULL; semantic(7); };
 dcl_spec					: dcl_specifiers							{ semantic(8); };
 dcl_specifiers			    : dcl_specifier								{ semantic(9); }
@@ -84,7 +84,13 @@ opt_formal_param 	        : formal_param_list							{ semantic(18); }
 formal_param_list       	: param_dcl									{ semantic(20); }
 							| formal_param_list TCOMMA param_dcl		{ semantic(21); };
 param_dcl				    : dcl_spec declarator 		    			{ update_symbol_type($2,current_type); update_function_param(current_func,current_type); update_symbol_kind($2,PARAM); semantic(22); };
-compound_st		        	: TLBRACE opt_dcl_list opt_stat_list TRBRACE { semantic(23); };
+compound_st:
+    TLBRACE { left_brace_cnt++; }
+    opt_dcl_list opt_stat_list 
+    TRBRACE { right_brace_cnt++; 
+        semantic(23);
+    }
+
 opt_dcl_list				: declaration_list							{ semantic(24); }
 							|		 									{ semantic(25); };
 declaration_list		    : declaration								{ semantic(26); }
@@ -119,23 +125,16 @@ statement					: compound_st								{ semantic(41); }
 							| while_st									{ semantic(44); }
 							| return_st									{ semantic(45); }
 							;
-expression_st              : opt_expression TSEMI                        { semantic(46);  }
-                           | opt_expression error                        { yyerror("Missing semicolon after expression"); yyerrok;};
+expression_st
+    : opt_expression TSEMI { semantic(46); }
+    | error TSEMI { yyerror2("Invalid expression or missing semicolon"); yyerrok; }
+;
 opt_expression	        	: expression								{ semantic(47); }
 							|											{ semantic(48); };
 
-if_st
-    : TIF TLPAREN expression TRPAREN statement %prec LOWER_THAN_ELSE { semantic(49); }
-    | TIF TLPAREN expression TRPAREN statement TELSE statement { semantic(50); }
-    | TIF error expression TRPAREN statement %prec LOWER_THAN_ELSE { yyerror("Missing opening parenthesis in if condition"); yyerrok; }
-    | TIF TLPAREN expression error statement %prec LOWER_THAN_ELSE { yyerror("Missing closing parenthesis in if condition"); yyerrok; }
-;
-
-while_st
-    : TWHILE TLPAREN expression TRPAREN statement { semantic(51); }
-    | TWHILE error expression TRPAREN statement { yyerror("Missing opening parenthesis in while condition"); yyerrok; }
-    | TWHILE TLPAREN expression error statement { yyerror("Missing closing parenthesis in while condition"); yyerrok; }
-;
+if_st						: TIF TLPAREN expression TRPAREN statement %prec LOWER_THAN_ELSE		{}
+							| TIF TLPAREN expression TRPAREN statement TELSE statement			{};
+while_st		    		: TWHILE TLPAREN expression TRPAREN statement{};
 
 return_st					: TRETURN opt_expression TSEMI				{ semantic(52); };
 expression			    	: assignment_exp							{ semantic(53); };
@@ -191,6 +190,15 @@ void yyerror(char *s)
     printf("line %d: %s\n", lineNumber, s);
 }
 
+void yyerror2(char *s)
+{
+    printf("line %d: %s\n", lineNumber-1, s);
+}
+void check_brace_balance() {
+    if (left_brace_cnt != right_brace_cnt) {
+        fprintf(stderr, "Error: Mismatched braces\n");
+    }
+}
 void semantic(int n)
 {
 	printf("reduced rule number = %d\n", n);
