@@ -19,7 +19,10 @@ Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
 %}
 
 %token TEOF TERROR TCOMMENT
-%token TIDENT TNUMBER TFNUMBER TCONST TELSE TIF TINT TFLOAT TRETURN TVOID TWHILE
+%token <sval> TIDENT
+%token <ival> TNUMBER
+%token <fval> TFNUMBER
+%token TCONST TELSE TIF TINT TFLOAT TRETURN TVOID TWHILE
 %token TADD TSUB TMUL TDIV TMOD TASSIGN 
 %token TADDASSIGN TSUBASSIGN TMULASSIGN TDIVASSIGN TMODASSIGN
 %token TNOT TAND TOR TEQUAL TNOTEQU TLESS TLESSE TGREAT TGREATE TINC TDEC 
@@ -70,7 +73,7 @@ Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
 %type <params> opt_actual_param;
 %type <params> actual_param ;
 %type <params> actual_param_list;
-
+%type <ival> opt_number
 
 %%
 mini_c						: translation_unit							{ semantic(1); };
@@ -120,9 +123,21 @@ init_declarator			    : declarator								{ update_symbol_type($1, current_type)
 																			else{update_symbol_type($1, current_type); }  };
 
 declarator				    : TIDENT									{ $$ = $1; update_symbol_kind($1,SCALAR); semantic(33); }
-							| TIDENT TLBRACKET opt_number TRBRACKET		{ update_symbol_kind($1,ARRAY); semantic(34); };
-opt_number				    : TNUMBER									{ semantic(35); }
-							|											{ semantic(36); };
+							| TIDENT TLBRACKET opt_number TRBRACKET		{
+																			if ($3 < 0) {
+																				yyerror("Error: Array size cannot be negative.");
+																			} else {
+																				$$ = $1;
+																				update_symbol_kind($1, ARRAY);
+																				semantic(34);
+																			}
+																		}
+																	;
+opt_number				    : TNUMBER { if ($1 < 0) { yyerror("Error: Array size cannot be negative."); $$ = 0; } else { $$ = $1; } semantic(35); }
+							|	{ 
+									$$ = 0; // 배열 크기 정해지지 않았을 경우 디폴트 크기 0으로 설정
+									semantic(36);
+								};
 opt_stat_list				: statement_list							{ semantic(37); }
 							|											{ semantic(38); };
 statement_list		    	: statement									{ semantic(39); }
