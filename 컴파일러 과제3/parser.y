@@ -131,15 +131,15 @@ declarator				    : TIDENT									{ $$ = $1; if(is_declared($1)){ char error_me
 																			} else {
 																				$$ = $1;
 																				update_symbol_kind($1, ARRAY);
-																				semantic(34);
+																			
 																			}
 																		}
 																	;
 
-opt_number				    : TNUMBER { if ($1 < 0) { yyerror("Error: Array size cannot be negative."); $$ = 0; } else { $$ = $1; } semantic(35); }
+opt_number				    : TNUMBER { if ($1 < 0) { yyerror("Error: Array size cannot be negative."); $$ = 0; } else { $$ = $1; }}
 							|	{ 
 									$$ = 0; // 배열 크기 정해지지 않았을 경우 디폴트 크기 0으로 설정
-									semantic(36);
+								
 								};
 							
 
