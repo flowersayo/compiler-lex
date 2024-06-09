@@ -41,9 +41,18 @@ typedef enum kind
 
 } Kind;
 
+typedef struct Params
+{
+    Type types[MAX_PARAMS];
+    int param_cnt;
+} Params;
+
 void update_symbol_kind(char *ident, Kind kind);
 void update_symbol_type(char *ident, Type type);
 void update_function_param(char *func_name, Type type);
 bool is_declared(char *ident);
+bool is_func(char *ident);
+bool check_param_match(char *func, Params *given_params);
+Type get_symbol_type(char *ident);
 
 const char *str_var_types[TYPE_COUNT];

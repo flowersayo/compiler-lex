@@ -15,7 +15,7 @@
    gcc main.c parser_tab.h parser_tab.c hash_func.h hash_func.c sym_table_lab.h sym_table_lab.c tn.h reporterror.c
    // lex.yy.c 는 parser.y 에 이미 포함됨
 
-! parser.y 의 union 에서 커스텀 구조체를 사용할 경우 결과 parser.tab.h에 수동으로 #include "sym_table_lab.h” 넣어주어야 한다. 아니면 해당 구조체를 찾지 못했다는 에러가 뜬다.
+! parser.y 의 union 에서 커스텀 구조체를 사용할 경우 unknown type name 'Params'라는 에러가 나온다. 결과 parser.tab.h에 수동으로 #include "sym_table_lab.h” 넣어주어야 한다. 아니면 해당 구조체를 찾지 못했다는 에러가 뜬다.
 
 ! union 을 사용할 경우 YYSTYPE가 중복정의되어있다는 오류가 있다. 따라서 parser_tab.c 의 71번째 줄에서 아래 구문을 제거해주어야 한다.
 

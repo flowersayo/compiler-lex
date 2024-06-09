@@ -15,11 +15,10 @@ char str_pool[MAX_STR_POOL];
 typedef struct symbol
 {
 
-    Kind kind;               // ident 의 유형
-    Type type;               // 변수일 경우 변수 타입, 함수일 경우 리턴 타입
-    Type params[MAX_PARAMS]; // 함수일경우 파라미터 목록 저장 (sym table 의 idx)
-    int param_cnt;
-    int st_idx; // stringpool index
+    Kind kind;      // ident 의 유형
+    Type type;      // 변수일 경우 변수 타입, 함수일 경우 리턴 타입
+    Params *params; // 함수일경우 파라미터 목록 저장 (sym table 의 idx)
+    int st_idx;     // stringpool index
     int length;
     int line;
 } Symbol;
@@ -93,11 +92,23 @@ void print_sym_table()
                sym_table[i]->line);
 
         // 함수일 경우 매개변수 출력하기
-        int j = 0;
-        while (j < sym_table[i]->param_cnt)
+
+        if (sym_table[i]->kind == FUNC)
         {
-            printf("%s ", str_var_types[sym_table[i]->params[j]]);
-            j++;
+            Params *params = sym_table[i]->params;
+
+            if (params == NULL)
+            {
+                printf("none");
+            }
+            else
+            {
+
+                for (int j = 0; j < params->param_cnt; j++)
+                {
+                    printf("%s ", str_var_types[params->types[j]]);
+                }
+            }
         }
 
         printf("\n");
@@ -221,7 +232,7 @@ void SymbolTable(char *ident, int len)
         sym_table[sym_table_index]->type = NONE_TYPE;
         sym_table[sym_table_index]->st_idx = str_pool_index;
         sym_table[sym_table_index]->length = len;
-        sym_table[sym_table_index]->param_cnt = 0;
+        sym_table[sym_table_index]->params = NULL;
 
         sym_table[sym_table_index++]
             ->line = lineNumber;
@@ -243,6 +254,16 @@ void update_symbol_kind(char *ident, Kind kind)
     }
 }
 
+Type get_symbol_type(char *ident)
+{
+
+    int hash_value = divisionMethod(ident, HASH_TABLE_SIZE);
+
+    HTpointer htp = lookup_hash_table(ident, hash_value);
+
+    return sym_table[htp->index]->type;
+}
+
 void update_symbol_type(char *ident, Type type)
 {
 
@@ -261,15 +282,25 @@ void update_function_param(char *func_name, Type type)
 {
 
     int func_hash_value = divisionMethod(func_name, HASH_TABLE_SIZE);
-
     HTpointer func_htp = lookup_hash_table(func_name, func_hash_value);
 
     if (func_htp != NULL)
     {
+        if (sym_table[func_htp->index]->params == NULL)
+        { // 파라미터 동적할당
+            sym_table[func_htp->index]->params = malloc(sizeof(Params));
 
-        int idx = sym_table[func_htp->index]->param_cnt; // 파라미터 개수
-        sym_table[func_htp->index]->params[idx] = type;  // 함수 파라미터 하나 추가
-        sym_table[func_htp->index]->param_cnt++;         // 파라미터 개수 1 증가
+            if (sym_table[func_htp->index]->params == NULL)
+            {
+                printf("Memory allocation failed\n");
+                exit(1);
+            }
+        }
+        Params *params = sym_table[func_htp->index]->params;
+
+        int idx = params->param_cnt; // 파라미터 개수
+        params->types[idx] = type;   // 함수 파라미터 하나 추가
+        params->param_cnt++;         // 파라미터 개수 1 증가
     }
 }
 
@@ -283,9 +314,75 @@ bool is_declared(char *ident)
 
     if (htp != NULL && sym_table[htp->index]->kind != NONE)
     {
-        printf("정의된 타입 : %s", sym_table[htp->index]->kind);
+
         return true;
     }
 
     return false;
+}
+
+bool is_func(char *ident)
+{
+    int hash_value = divisionMethod(ident, HASH_TABLE_SIZE);
+
+    HTpointer htp = lookup_hash_table(ident, hash_value);
+
+    if (htp != NULL && sym_table[htp->index]->kind == FUNC)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+/*
+
+typedef struct Params
+{
+    Type types[MAX_PARMS];
+    int param_cnt;
+} Params;
+*/
+
+// 전달된 두개의 파라미터가 동일한지 확인
+bool check_param_match(char *func, Params *given_params)
+{
+
+    int hash_value = divisionMethod(func, HASH_TABLE_SIZE);
+    HTpointer htp = lookup_hash_table(func, hash_value);
+
+    if (htp == NULL || sym_table[htp->index]->kind != FUNC)
+    {
+        return false;
+    }
+
+    Symbol *func_sym = sym_table[htp->index];
+    Params *func_params = func_sym->params; // 함수에 정의된 파라미터 목록
+
+    if (given_params == NULL && func_params != NULL || given_params != NULL && func_params == NULL)
+    {
+        return false;
+    }
+
+    if (given_params == NULL && func_params == NULL)
+    {
+        return true;
+    }
+
+    if (given_params->param_cnt != func_params->param_cnt)
+    { // 매개 변수 갯수가 일치하지 않을 경우
+        return false;
+    }
+
+    // 나머지 매개변수들의 타입이 일치하는지 확인
+    for (int i = 0; i < func_params->param_cnt; i++)
+    {
+        if (func_params->types[i] != given_params->types[i])
+        {
+            printf("func_params: %d, given_params: %d ", func_params->types[i], given_params->types[i]);
+            return false;
+        }
+    }
+
+    return true;
 }

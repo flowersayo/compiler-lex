@@ -13,6 +13,9 @@ char * current_func ; // 현재 실행 중인 함수 이름
 int total_err_cnt = 0 ;
 Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
 
+
+
+
 %}
 
 %token TEOF TERROR TCOMMENT
@@ -27,6 +30,7 @@ Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
     float fval;
     char *sval;
     int type;
+	Params* params;
 }
 
 
@@ -42,11 +46,30 @@ Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
 %type <type> dcl_spec
 
 
+%type <type> postfix_exp 
+%type <type> unary_exp
+%type <type> multiplicative_exp 
+%type <type> additive_exp  
+%type <type> relational_exp 
+%type <type> equality_exp
+%type <type> logical_and_exp
+%type <type> logical_or_exp 
+
+
+
+%type <type> assignment_exp
+%type <type> expression 
+
 
 %type <sval> function_name
 %type <sval> declarator
 %type <sval> init_dcl_list
 %type <sval> init_declarator
+%type <sval> primary_exp
+
+%type <params> opt_actual_param;
+%type <params> actual_param ;
+%type <params> actual_param_list;
 
 
 %%
@@ -118,8 +141,8 @@ if_st						: TIF TLPAREN expression TRPAREN statement %prec LOWER_THAN_ELSE		{ s
 							| TIF TLPAREN expression TRPAREN statement TELSE statement			{ semantic(50); };
 while_st		    		: TWHILE TLPAREN expression TRPAREN statement{ semantic(51); };
 return_st					: TRETURN opt_expression TSEMI				{ semantic(52); };
-expression			    	: assignment_exp							{ semantic(53); };
-assignment_exp		        : logical_or_exp							{ semantic(54); }
+expression			    	: assignment_exp							{  semantic(53); };
+assignment_exp		        : logical_or_exp							{ $$ = $1; semantic(54); }
 							| unary_exp TASSIGN assignment_exp			{ semantic(55); }
 							| unary_exp TADDASSIGN assignment_exp		{ semantic(56); }
 							| unary_exp TSUBASSIGN assignment_exp		{ semantic(57); }
@@ -127,46 +150,58 @@ assignment_exp		        : logical_or_exp							{ semantic(54); }
 							| unary_exp TDIVASSIGN assignment_exp		{ semantic(59); }
 							| unary_exp TMODASSIGN assignment_exp		{ semantic(60); }
 							;
-logical_or_exp   	    	: logical_and_exp         					{ semantic(61); }
+logical_or_exp   	    	: logical_and_exp         					{ $$ = $1; semantic(61); }
    							| logical_or_exp TOR logical_and_exp   		{ semantic(62); };
-logical_and_exp   	        : equality_exp         						{ semantic(63); }
+logical_and_exp   	        : equality_exp         						{ $$ = $1; semantic(63); }
      						| logical_and_exp TAND equality_exp   		{ semantic(64); };
-equality_exp   			    : relational_exp         					{ semantic(65); }
+equality_exp   			    : relational_exp         					{ $$ = $1; semantic(65); }
       						| equality_exp TEQUAL relational_exp   		{ semantic(66); }
      						| equality_exp TNOTEQU relational_exp   	{ semantic(67); };
-relational_exp              : additive_exp                             { semantic(68); }
+relational_exp              : additive_exp                             { $$ = $1; semantic(68); }
       						| relational_exp '>' additive_exp   		{ semantic(69); }
       						| relational_exp '<' additive_exp   		{ semantic(70); }
       						| relational_exp TGREATE additive_exp   	{ semantic(71); }
       						| relational_exp TLESSE additive_exp   		{ semantic(72); };
-additive_exp   	    		: multiplicative_exp         				{ semantic(73); }
+additive_exp   	    		: multiplicative_exp         				{ $$ = $1; semantic(73); }
       						| additive_exp TADD multiplicative_exp   	{ semantic(74); }
       						| additive_exp TSUB multiplicative_exp   	{ semantic(75); };
-multiplicative_exp          : unary_exp         						{ semantic(76); }
+multiplicative_exp          : unary_exp         						{ $$ = $1; semantic(76); }
      						| multiplicative_exp TMUL unary_exp      	{ semantic(77); }
       						| multiplicative_exp TDIV unary_exp   		{ semantic(78); }
       						| multiplicative_exp TMOD unary_exp   		{ semantic(79); };
-unary_exp   				: postfix_exp         						{ semantic(80); }
+unary_exp   				: postfix_exp         						{ $$ = $1; semantic(80); }
       						| TSUB unary_exp         					{ semantic(81); }
       						| TNOT unary_exp        					{ semantic(82); }
       						| TINC unary_exp         					{ semantic(83); }
       						| TDEC unary_exp         					{ semantic(84); };
-postfix_exp 				: primary_exp 								{ semantic(85); }
+postfix_exp 				: primary_exp 								{ $$ = $1; semantic(85); }
 							| postfix_exp TLBRACKET expression TRBRACKET{ semantic(86); }
-							| postfix_exp TLPAREN opt_actual_param TRPAREN { semantic(87); }
+							| postfix_exp TLPAREN opt_actual_param TRPAREN { if(!is_func(current_func)){ yyerror("Attempt to call a non-function"); } 
+																								else if(!check_param_match(current_func,$3))
+																								{
+																									yyerror("Parameter not match");
+																								} semantic(87); }
 							| postfix_exp TINC 							{ semantic(88); }
 							| postfix_exp TDEC							{ semantic(89); };
-opt_actual_param 	        : actual_param 								{ semantic(90); }
-							| 											{ semantic(91); };
-actual_param 			    : actual_param_list 						{ semantic(92); };
-actual_param_list 	        : assignment_exp 							{ semantic(93); }
-							| actual_param_list TCOMMA assignment_exp 	{ semantic(94); };
-primary_exp 			    : TIDENT 									{ if(!is_declared($1)){
+opt_actual_param 	        : actual_param 								{ $$ = $1; semantic(90); }
+							| 											{ $$ = NULL; semantic(91); };
+actual_param 			    : actual_param_list 						{ $$ = $1; semantic(92); };
+actual_param_list 	        : assignment_exp 							{ Params* new_params = malloc(sizeof(Params));
+																			new_params->types[0] = $1; new_params->param_cnt++; $$ = new_params;  semantic(93); }
+							| actual_param_list TCOMMA assignment_exp 	{ $1->types[$1->param_cnt++] = $3; $$ = $1; semantic(94); };
+primary_exp 			    : TIDENT 									{ $$ = get_symbol_type($1); if(!is_declared($1)){
 																				char error_message[256]; 
 																				sprintf(error_message, "Undeclared identifier %s", $1);
 																				yyerror(error_message);
-																							} semantic(95); }
-							| TNUMBER 									{ semantic(96); }
+																							} 
+
+																				if(is_func($1)){
+																					current_func = $1; 
+																				}
+																							
+																							semantic(95); }
+							| TNUMBER 									{ $$ = INT_TYPE; semantic(96); }
+							| TFNUMBER 									{ $$ = FLOAT_TYPE; }
 							| TLPAREN expression TRPAREN 				{ semantic(97); };
 %%
 
