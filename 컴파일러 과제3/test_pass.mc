@@ -22,10 +22,9 @@ int main()
     int i = 2;
     while(i <= h) {
 		
-		if (prime == 1) write(i); 
+		if (i == 2) add(1,3); 
 		++i;
-	return result;
-}
+	}
 
 
 }
