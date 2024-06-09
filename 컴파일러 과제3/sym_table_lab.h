@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 
 #define SYM_TABLE_SIZE 100
 #define HASH_TABLE_SIZE 11
@@ -43,4 +44,6 @@ typedef enum kind
 void update_symbol_kind(char *ident, Kind kind);
 void update_symbol_type(char *ident, Type type);
 void update_function_param(char *func_name, Type type);
+bool is_declared(char *ident);
+
 const char *str_var_types[TYPE_COUNT];

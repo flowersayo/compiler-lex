@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
 #include "sym_table_lab.h"
 #include "hash_func.h"
 #include "tn.h"
@@ -232,9 +233,6 @@ void SymbolTable(char *ident, int len)
 
 void update_symbol_kind(char *ident, Kind kind)
 {
-
-    printf("%s %d", ident, kind);
-
     int hash_value = divisionMethod(ident, HASH_TABLE_SIZE);
 
     HTpointer htp = lookup_hash_table(ident, hash_value);
@@ -262,8 +260,6 @@ void update_symbol_type(char *ident, Type type)
 void update_function_param(char *func_name, Type type)
 {
 
-    printf("update_function_param");
-
     int func_hash_value = divisionMethod(func_name, HASH_TABLE_SIZE);
 
     HTpointer func_htp = lookup_hash_table(func_name, func_hash_value);
@@ -275,4 +271,21 @@ void update_function_param(char *func_name, Type type)
         sym_table[func_htp->index]->params[idx] = type;  // 함수 파라미터 하나 추가
         sym_table[func_htp->index]->param_cnt++;         // 파라미터 개수 1 증가
     }
+}
+
+// 특정 ident 가 declared 되었는지 확인
+bool is_declared(char *ident)
+{
+
+    int hash_value = divisionMethod(ident, HASH_TABLE_SIZE);
+
+    HTpointer htp = lookup_hash_table(ident, hash_value);
+
+    if (htp != NULL && sym_table[htp->index]->kind != NONE)
+    {
+        printf("정의된 타입 : %s", sym_table[htp->index]->kind);
+        return true;
+    }
+
+    return false;
 }

@@ -161,7 +161,11 @@ opt_actual_param 	        : actual_param 								{ semantic(90); }
 actual_param 			    : actual_param_list 						{ semantic(92); };
 actual_param_list 	        : assignment_exp 							{ semantic(93); }
 							| actual_param_list TCOMMA assignment_exp 	{ semantic(94); };
-primary_exp 			    : TIDENT 									{ semantic(95); }
+primary_exp 			    : TIDENT 									{ if(!is_declared($1)){
+																				char error_message[256]; 
+																				sprintf(error_message, "Undeclared identifier %s", $1);
+																				yyerror(error_message);
+																							} semantic(95); }
 							| TNUMBER 									{ semantic(96); }
 							| TLPAREN expression TRPAREN 				{ semantic(97); };
 %%
@@ -176,3 +180,5 @@ void semantic(int n)
 {
 	printf("reduced rule number = %d\n", n);
 }
+
+
