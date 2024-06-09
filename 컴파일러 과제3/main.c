@@ -161,9 +161,11 @@ void main()
 		}
 		*/
 
-	printf("***MiniC parsing begins \n");
+	printf("start of parser\n");
 	yyparse();
-	printf("Parsing ends.***\n");
+	check_brace_balance();
+	printf("end of parser\n");
+
 
 	printf("%d error(s) detected ", total_err_cnt);
 
