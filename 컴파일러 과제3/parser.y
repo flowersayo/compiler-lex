@@ -19,9 +19,6 @@ Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
 %}
 
 %token TEOF TERROR TCOMMENT
-%token <sval> TIDENT
-%token <ival> TNUMBER
-%token <fval> TFNUMBER
 %token TCONST TELSE TIF TINT TFLOAT TRETURN TVOID TWHILE
 %token TADD TSUB TMUL TDIV TMOD TASSIGN 
 %token TADDASSIGN TSUBASSIGN TMULASSIGN TDIVASSIGN TMODASSIGN
@@ -42,12 +39,15 @@ Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
 
 
 %token <sval> TIDENT
+%token <ival> TNUMBER
+%token <fval> TFNUMBER
+
+%type <ival> opt_number
 
 %type <type> type_specifier
 %type <type> dcl_specifiers
 %type <type> dcl_specifier
 %type <type> dcl_spec
-
 
 %type <type> postfix_exp 
 %type <type> unary_exp
@@ -57,7 +57,6 @@ Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
 %type <type> equality_exp
 %type <type> logical_and_exp
 %type <type> logical_or_exp 
-
 
 
 %type <type> assignment_exp
@@ -73,57 +72,60 @@ Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
 %type <params> opt_actual_param;
 %type <params> actual_param ;
 %type <params> actual_param_list;
-%type <ival> opt_number
+
+
 
 %%
-mini_c						: translation_unit							{ semantic(1); };
-translation_unit	    	: external_dcl								{ semantic(2); }
-							| translation_unit external_dcl			    { semantic(3); };
-external_dcl				: function_def								{ semantic(4); }
-							| declaration								{ semantic(5); };
-function_def				: function_header compound_st 	     		{ semantic(6); };
-function_header	        	: dcl_spec function_name formal_param		{ current_func = NULL; semantic(7); };
-dcl_spec					: dcl_specifiers							{ semantic(8); };
-dcl_specifiers			    : dcl_specifier								{ semantic(9); }
-							| dcl_specifiers dcl_specifier				{ semantic(10); };
-dcl_specifier			    : type_qualifier							{ semantic(11); }
-							| type_specifier							{ semantic(12); };					
-type_qualifier		    	: TCONST									{ semantic(13); };
-type_specifier			    : TINT										{ current_type = INT_TYPE; semantic(14); }
-							| TFLOAT									{ current_type = FLOAT_TYPE; };
-							| TVOID										{ current_type = VOID_TYPE;  semantic(15); };
-function_name		        : TIDENT									{ current_func = $1; update_symbol_kind($1, FUNC); update_symbol_type($1,current_type); semantic(16); };	
+mini_c						: translation_unit							{};
+translation_unit	    	: external_dcl								{}
+							| translation_unit external_dcl			    {};
+external_dcl				: function_def								{}
+							| declaration								{};
+function_def				: function_header compound_st 	     		{};
+function_header	        	: dcl_spec function_name formal_param		{ current_func = NULL; };
+dcl_spec					: dcl_specifiers							{};
+dcl_specifiers			    : dcl_specifier								{}
+							| dcl_specifiers dcl_specifier				{};
+dcl_specifier			    : type_qualifier							{}
+							| type_specifier							{};					
+type_qualifier		    	: TCONST									{};
+type_specifier			    : TINT										{ current_type = INT_TYPE; }
+							| TFLOAT									{ current_type = FLOAT_TYPE; }
+							| TVOID										{ current_type = VOID_TYPE; };
+function_name		        : TIDENT									{ current_func = $1; update_symbol_kind($1, FUNC); update_symbol_type($1,current_type); };	
 
 abbreviated_param 			: TLPAREN dcl_spec_list TRPAREN				{ printf("abbreviated_param\n"); };						
-formal_param		    	: TLPAREN opt_formal_param TRPAREN			{ semantic(17); };
+formal_param		    	: TLPAREN opt_formal_param TRPAREN			{};
 
-opt_formal_param 	        : formal_param_list							{ semantic(18); }
-							|											{ semantic(19); };
-formal_param_list       	: param_dcl									{ semantic(20); }
-							| formal_param_list TCOMMA param_dcl		{ semantic(21); };
-param_dcl				    : dcl_spec declarator 		    			{ update_symbol_type($2,current_type); update_function_param(current_func,current_type); update_symbol_kind($2,PARAM); semantic(22); };
-compound_st		        	: TLBRACE opt_dcl_list opt_stat_list TRBRACE { semantic(23); };
-opt_dcl_list				: declaration_list							{ semantic(24); }
-							|		 									{ semantic(25); };
-declaration_list		    : declaration								{ semantic(26); }
-							| declaration_list declaration				{ semantic(27); };
+opt_formal_param 	        : formal_param_list							{}
+							|											{};
+formal_param_list       	: param_dcl									{}
+							| formal_param_list TCOMMA param_dcl		{};
+param_dcl				    : dcl_spec declarator 		    			{ update_symbol_type($2,current_type); update_function_param(current_func,current_type); update_symbol_kind($2,PARAM); };
+compound_st		        	: TLBRACE opt_dcl_list opt_stat_list TRBRACE {};
+opt_dcl_list				: declaration_list							{}
+							|		 									{};
+declaration_list		    : declaration								{}
+							| declaration_list declaration				{};
 
 declaration				    : dcl_spec init_dcl_list TSEMI				{ current_type = NONE_TYPE; }
-							| function_declaration					    { semantic(28); };
-declaration_param 			: abbreviated_param | formal_param			;
-function_declaration		: dcl_spec function_name declaration_param TSEMI {printf("function_declaration");};
-dcl_spec_list 				: dcl_spec 									{ semantic(98); update_function_param(current_func,current_type); }
-							| dcl_spec_list TCOMMA dcl_spec  			{ semantic(99); update_function_param(current_func,current_type); };
-init_dcl_list				: init_declarator							{ semantic(29); }
-							| init_dcl_list TCOMMA init_declarator		{ semantic(30); };
-init_declarator			    : declarator								{ update_symbol_type($1, current_type); semantic(31); }
-							| declarator TASSIGN TNUMBER				{ if(current_type != INT_TYPE){  yyerror("Type Mismatched. Expected int but float."); }
-																			else{update_symbol_type($1, current_type); } }
+							| function_declaration					    {};
+declaration_param 			: abbreviated_param | formal_param			{};
+function_declaration		: dcl_spec function_name declaration_param TSEMI { printf("function_declaration"); };
+dcl_spec_list 				: dcl_spec 									{ update_function_param(current_func,current_type); }
+							| dcl_spec_list TCOMMA dcl_spec  			{ update_function_param(current_func,current_type); };
+init_dcl_list				: init_declarator							{}
+							| init_dcl_list TCOMMA init_declarator		{};
+init_declarator			    : declarator								{ update_symbol_type($1, current_type); }
+							| declarator TASSIGN TNUMBER				{ if(current_type != INT_TYPE){ yyerror("Type Mismatched. Expected int but float."); }
+																			else{ update_symbol_type($1, current_type); } }
 							| declarator TASSIGN TFNUMBER 				{ if(current_type != FLOAT_TYPE){ yyerror("Type Mismatched. Expected float but int."); } 
-																			else{update_symbol_type($1, current_type); }  };
+																			else{ update_symbol_type($1, current_type); } };
 
-declarator				    : TIDENT									{ $$ = $1; update_symbol_kind($1,SCALAR); semantic(33); }
-							| TIDENT TLBRACKET opt_number TRBRACKET		{
+declarator				    : TIDENT									{ $$ = $1; if(is_declared($1)){ char error_message[256]; 
+																				sprintf(error_message, "Aleardy declared identifier %s", $1);
+																				yyerror(error_message); } else { update_symbol_kind($1,SCALAR); } }
+														| TIDENT TLBRACKET opt_number TRBRACKET		{
 																			if ($3 < 0) {
 																				yyerror("Error: Array size cannot be negative.");
 																			} else {
@@ -133,77 +135,78 @@ declarator				    : TIDENT									{ $$ = $1; update_symbol_kind($1,SCALAR); sem
 																			}
 																		}
 																	;
+
 opt_number				    : TNUMBER { if ($1 < 0) { yyerror("Error: Array size cannot be negative."); $$ = 0; } else { $$ = $1; } semantic(35); }
 							|	{ 
 									$$ = 0; // 배열 크기 정해지지 않았을 경우 디폴트 크기 0으로 설정
 									semantic(36);
 								};
-opt_stat_list				: statement_list							{ semantic(37); }
-							|											{ semantic(38); };
-statement_list		    	: statement									{ semantic(39); }
-							| statement_list statement					{ semantic(40); };
-statement					: compound_st								{ semantic(41); }
-							| expression_st								{ semantic(42); }
-							| if_st										{ semantic(43); }
-							| while_st									{ semantic(44); }
-							| return_st									{ semantic(45); }
-							;
-expression_st	    		: opt_expression TSEMI						{ semantic(46); };
+							
 
-opt_expression	        	: expression								{ semantic(47); }
-							|											{ semantic(48); };
-if_st						: TIF TLPAREN expression TRPAREN statement %prec LOWER_THAN_ELSE		{ semantic(49); }
-							| TIF TLPAREN expression TRPAREN statement TELSE statement			{ semantic(50); };
-while_st		    		: TWHILE TLPAREN expression TRPAREN statement{ semantic(51); };
-return_st					: TRETURN opt_expression TSEMI				{ semantic(52); };
-expression			    	: assignment_exp							{  semantic(53); };
-assignment_exp		        : logical_or_exp							{ $$ = $1; semantic(54); }
-							| unary_exp TASSIGN assignment_exp			{ semantic(55); }
-							| unary_exp TADDASSIGN assignment_exp		{ semantic(56); }
-							| unary_exp TSUBASSIGN assignment_exp		{ semantic(57); }
-							| unary_exp TMULASSIGN assignment_exp		{ semantic(58); }
-							| unary_exp TDIVASSIGN assignment_exp		{ semantic(59); }
-							| unary_exp TMODASSIGN assignment_exp		{ semantic(60); }
-							;
-logical_or_exp   	    	: logical_and_exp         					{ $$ = $1; semantic(61); }
-   							| logical_or_exp TOR logical_and_exp   		{ semantic(62); };
-logical_and_exp   	        : equality_exp         						{ $$ = $1; semantic(63); }
-     						| logical_and_exp TAND equality_exp   		{ semantic(64); };
-equality_exp   			    : relational_exp         					{ $$ = $1; semantic(65); }
-      						| equality_exp TEQUAL relational_exp   		{ semantic(66); }
-     						| equality_exp TNOTEQU relational_exp   	{ semantic(67); };
-relational_exp              : additive_exp                             { $$ = $1; semantic(68); }
-      						| relational_exp '>' additive_exp   		{ semantic(69); }
-      						| relational_exp '<' additive_exp   		{ semantic(70); }
-      						| relational_exp TGREATE additive_exp   	{ semantic(71); }
-      						| relational_exp TLESSE additive_exp   		{ semantic(72); };
-additive_exp   	    		: multiplicative_exp         				{ $$ = $1; semantic(73); }
-      						| additive_exp TADD multiplicative_exp   	{ semantic(74); }
-      						| additive_exp TSUB multiplicative_exp   	{ semantic(75); };
-multiplicative_exp          : unary_exp         						{ $$ = $1; semantic(76); }
-     						| multiplicative_exp TMUL unary_exp      	{ semantic(77); }
-      						| multiplicative_exp TDIV unary_exp   		{ semantic(78); }
-      						| multiplicative_exp TMOD unary_exp   		{ semantic(79); };
-unary_exp   				: postfix_exp         						{ $$ = $1; semantic(80); }
-      						| TSUB unary_exp         					{ semantic(81); }
-      						| TNOT unary_exp        					{ semantic(82); }
-      						| TINC unary_exp         					{ semantic(83); }
-      						| TDEC unary_exp         					{ semantic(84); };
-postfix_exp 				: primary_exp 								{ $$ = $1; semantic(85); }
-							| postfix_exp TLBRACKET expression TRBRACKET{ semantic(86); }
+opt_stat_list				: statement_list							{}
+							|											{};
+statement_list		    	: statement									{}
+							| statement_list statement					{};
+statement					: compound_st								{}
+							| expression_st								{}
+							| if_st										{}
+							| while_st									{}
+							| return_st									{};
+expression_st	    		: opt_expression TSEMI						{};
+
+opt_expression	        	: expression								{}
+							|											{};
+if_st						: TIF TLPAREN expression TRPAREN statement %prec LOWER_THAN_ELSE		{}
+							| TIF TLPAREN expression TRPAREN statement TELSE statement			{};
+while_st		    		: TWHILE TLPAREN expression TRPAREN statement{};
+return_st					: TRETURN opt_expression TSEMI				{};
+expression			    	: assignment_exp							{};
+assignment_exp		        : logical_or_exp							{ $$ = $1; }
+							| unary_exp TASSIGN assignment_exp			{}
+							| unary_exp TADDASSIGN assignment_exp		{}
+							| unary_exp TSUBASSIGN assignment_exp		{}
+							| unary_exp TMULASSIGN assignment_exp		{}
+							| unary_exp TDIVASSIGN assignment_exp		{}
+							| unary_exp TMODASSIGN assignment_exp		{};
+logical_or_exp   	    	: logical_and_exp         					{ $$ = $1; }
+   							| logical_or_exp TOR logical_and_exp   		{};
+logical_and_exp   	        : equality_exp         						{ $$ = $1; }
+     						| logical_and_exp TAND equality_exp   		{};
+equality_exp   			    : relational_exp         					{ $$ = $1; }
+      						| equality_exp TEQUAL relational_exp   		{}
+     						| equality_exp TNOTEQU relational_exp   	{};
+relational_exp              : additive_exp                             { $$ = $1; }
+      						| relational_exp '>' additive_exp   		{}
+      						| relational_exp '<' additive_exp   		{}
+      						| relational_exp TGREATE additive_exp   	{}
+      						| relational_exp TLESSE additive_exp   		{};
+additive_exp   	    		: multiplicative_exp         				{ $$ = $1; }
+      						| additive_exp TADD multiplicative_exp   	{}
+      						| additive_exp TSUB multiplicative_exp   	{};
+multiplicative_exp          : unary_exp         						{ $$ = $1; }
+     						| multiplicative_exp TMUL unary_exp      	{}
+      						| multiplicative_exp TDIV unary_exp   		{}
+      						| multiplicative_exp TMOD unary_exp   		{};
+unary_exp   				: postfix_exp         						{ $$ = $1; }
+      						| TSUB unary_exp         					{}
+      						| TNOT unary_exp        					{}
+      						| TINC unary_exp         					{}
+      						| TDEC unary_exp         					{};
+postfix_exp 				: primary_exp 								{ $$ = $1; }
+							| postfix_exp TLBRACKET expression TRBRACKET{}
 							| postfix_exp TLPAREN opt_actual_param TRPAREN { if(!is_func(current_func)){ yyerror("Attempt to call a non-function"); } 
 																								else if(!check_param_match(current_func,$3))
 																								{
 																									yyerror("Parameter not match");
-																								} semantic(87); }
-							| postfix_exp TINC 							{ semantic(88); }
-							| postfix_exp TDEC							{ semantic(89); };
-opt_actual_param 	        : actual_param 								{ $$ = $1; semantic(90); }
-							| 											{ $$ = NULL; semantic(91); };
-actual_param 			    : actual_param_list 						{ $$ = $1; semantic(92); };
+																								} }
+							| postfix_exp TINC 							{}
+							| postfix_exp TDEC							{};
+opt_actual_param 	        : actual_param 								{ $$ = $1; }
+							| 											{ $$ = NULL; };
+actual_param 			    : actual_param_list 						{ $$ = $1; };
 actual_param_list 	        : assignment_exp 							{ Params* new_params = malloc(sizeof(Params));
-																			new_params->types[0] = $1; new_params->param_cnt++; $$ = new_params;  semantic(93); }
-							| actual_param_list TCOMMA assignment_exp 	{ $1->types[$1->param_cnt++] = $3; $$ = $1; semantic(94); };
+																			new_params->types[0] = $1; new_params->param_cnt++; $$ = new_params; }
+							| actual_param_list TCOMMA assignment_exp 	{ $1->types[$1->param_cnt++] = $3; $$ = $1; };
 primary_exp 			    : TIDENT 									{ $$ = get_symbol_type($1); if(!is_declared($1)){
 																				char error_message[256]; 
 																				sprintf(error_message, "Undeclared identifier %s", $1);
@@ -212,12 +215,10 @@ primary_exp 			    : TIDENT 									{ $$ = get_symbol_type($1); if(!is_declared
 
 																				if(is_func($1)){
 																					current_func = $1; 
-																				}
-																							
-																							semantic(95); }
-							| TNUMBER 									{ $$ = INT_TYPE; semantic(96); }
+																				}}
+							| TNUMBER 									{ $$ = INT_TYPE; }
 							| TFNUMBER 									{ $$ = FLOAT_TYPE; }
-							| TLPAREN expression TRPAREN 				{ semantic(97); };
+							| TLPAREN expression TRPAREN 				{};
 %%
 
 void yyerror(char *s)
