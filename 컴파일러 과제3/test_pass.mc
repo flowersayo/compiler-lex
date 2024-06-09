@@ -8,9 +8,11 @@ int multiply(int a,int b){
 
 int main()
 {
-
+    int array[3];
     int a = 1;
     float f = 3.0;
+    int i = 0;
+    i = 3 + 4;
 
     int b;
 
