@@ -23,7 +23,7 @@ int main()
     while(i <= h) {
 		
 		if (i == 2) add(1,3); 
-		++i;
+		i++;
 	}
 
 
