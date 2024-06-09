@@ -64,7 +64,7 @@ dcl_specifier			    : type_qualifier							{ semantic(11); }
 							| type_specifier							{ semantic(12); };					
 type_qualifier		    	: TCONST									{ semantic(13); };
 type_specifier			    : TINT										{ current_type = INT_TYPE; semantic(14); }
-							| TFLOAT									{ current_type = FLOAT_TYPE; printf("type_specifier->float\n")};
+							| TFLOAT									{ current_type = FLOAT_TYPE; };
 							| TVOID										{ current_type = VOID_TYPE;  semantic(15); };
 function_name		        : TIDENT									{ current_func = $1; update_symbol_kind($1, FUNC); update_symbol_type($1,current_type); semantic(16); };	
 
@@ -86,14 +86,14 @@ declaration				    : dcl_spec init_dcl_list TSEMI				{ current_type = NONE_TYPE;
 							| function_declaration					    { semantic(28); };
 declaration_param 			: abbreviated_param | formal_param			;
 function_declaration		: dcl_spec function_name declaration_param TSEMI {printf("function_declaration");};
-dcl_spec_list 				: dcl_spec { semantic(98); update_function_param(current_func,current_type); }
-							| dcl_spec_list TCOMMA dcl_spec  { semantic(99); update_function_param(current_func,current_type); };
+dcl_spec_list 				: dcl_spec 									{ semantic(98); update_function_param(current_func,current_type); }
+							| dcl_spec_list TCOMMA dcl_spec  			{ semantic(99); update_function_param(current_func,current_type); };
 init_dcl_list				: init_declarator							{ semantic(29); }
 							| init_dcl_list TCOMMA init_declarator		{ semantic(30); };
 init_declarator			    : declarator								{ update_symbol_type($1, current_type); semantic(31); }
-							| declarator TASSIGN TNUMBER				{ if(current_type != INT_TYPE){  printf("line: %d,[ERROR!] Type Mismatched. Expected int but float.");  total_err_cnt++; }
+							| declarator TASSIGN TNUMBER				{ if(current_type != INT_TYPE){  yyerror("Type Mismatched. Expected int but float."); }
 																			else{update_symbol_type($1, current_type); } }
-							| declarator TASSIGN TFNUMBER				{ if(current_type != FLOAT_TYPE){ printf("line: %d, [ERROR!] Type Mismatched. Expected float but int."); total_err_cnt++; } 
+							| declarator TASSIGN TFNUMBER 				{ if(current_type != FLOAT_TYPE){ yyerror("Type Mismatched. Expected float but int."); } 
 																			else{update_symbol_type($1, current_type); }  };
 
 declarator				    : TIDENT									{ $$ = $1; update_symbol_kind($1,SCALAR); semantic(33); }
@@ -111,6 +111,7 @@ statement					: compound_st								{ semantic(41); }
 							| return_st									{ semantic(45); }
 							;
 expression_st	    		: opt_expression TSEMI						{ semantic(46); };
+
 opt_expression	        	: expression								{ semantic(47); }
 							|											{ semantic(48); };
 if_st						: TIF TLPAREN expression TRPAREN statement %prec LOWER_THAN_ELSE		{ semantic(49); }
@@ -167,8 +168,10 @@ primary_exp 			    : TIDENT 									{ semantic(95); }
 
 void yyerror(char *s)
 {
-	printf("%s\n", s);
+   printf("Error at line %d: %s\n", lineNumber, s);
+    total_err_cnt++; 
 }
+
 void semantic(int n)
 {
 	printf("reduced rule number = %d\n", n);
