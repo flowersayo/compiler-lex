@@ -12,7 +12,10 @@ void yyerror(char *);
 char * current_func ; // 현재 실행 중인 함수 이름
 int total_err_cnt = 0 ;
 Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
+int left_brace_cnt = 0; //왼쪽 중괄호 개수
+int right_brace_cnt = 0; //오른쪽 중괄호 개수
 
+void check_brace_balance();
 
 
 
@@ -102,14 +105,19 @@ opt_formal_param 	        : formal_param_list							{}
 formal_param_list       	: param_dcl									{}
 							| formal_param_list TCOMMA param_dcl		{};
 param_dcl				    : dcl_spec declarator 		    			{ update_symbol_type($2,current_type); update_function_param(current_func,current_type); update_symbol_kind($2,PARAM); };
-compound_st		        	: TLBRACE opt_dcl_list opt_stat_list TRBRACE {};
+compound_st:
+    TLBRACE { left_brace_cnt++; }
+    opt_dcl_list opt_stat_list 
+    TRBRACE { right_brace_cnt++; 
+    }
 opt_dcl_list				: declaration_list							{}
 							|		 									{};
 declaration_list		    : declaration								{}
 							| declaration_list declaration				{};
 
 declaration				    : dcl_spec init_dcl_list TSEMI				{ current_type = NONE_TYPE; }
-							| function_declaration					    {};
+							| function_declaration                        { }
+                           | dcl_spec init_dcl_list error                {  yyerror("Missing semicolon after declaration");  current_type = NONE_TYPE; yyerrok; };
 declaration_param 			: abbreviated_param | formal_param			{};
 function_declaration		: dcl_spec function_name declaration_param TSEMI { printf("function_declaration"); };
 dcl_spec_list 				: dcl_spec 									{ update_function_param(current_func,current_type); }
@@ -152,7 +160,10 @@ statement					: compound_st								{}
 							| if_st										{}
 							| while_st									{}
 							| return_st									{};
-expression_st	    		: opt_expression TSEMI						{};
+expression_st
+    : opt_expression TSEMI { }
+    | error TSEMI { yyerror2("Invalid expression or missing semicolon"); yyerrok; }
+;
 
 opt_expression	        	: expression								{}
 							|											{};
@@ -226,7 +237,15 @@ void yyerror(char *s)
    printf("Error at line %d: %s\n", lineNumber, s);
     total_err_cnt++; 
 }
-
+void yyerror2(char *s)
+{
+    printf("line %d: %s\n", lineNumber-1, s);
+}
+void check_brace_balance() {
+    if (left_brace_cnt != right_brace_cnt) {
+        fprintf(stderr, "Error: Mismatched braces\n");
+    }
+}
 void semantic(int n)
 {
 	printf("reduced rule number = %d\n", n);
