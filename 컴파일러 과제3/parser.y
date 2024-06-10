@@ -7,13 +7,15 @@
 
 /*yacc source for Mini C */
 void semantic(int);
-void reportError(char *); 
-void yyerror(char *); // bison 자체에서 error 를 만나면 호출
+void yyerror(char *);
 
 char * current_func ; // 현재 실행 중인 함수 이름
 int total_err_cnt = 0 ;
 Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
+int left_brace_cnt = 0; //왼쪽 중괄호 개수
+int right_brace_cnt = 0; //오른쪽 중괄호 개수
 
+void check_brace_balance();
 
 
 
@@ -68,7 +70,7 @@ Type current_type = NONE_TYPE; // 현재 활성화된 선언 타입
 %type <sval> declarator
 %type <sval> init_dcl_list
 %type <sval> init_declarator
-%type <type> primary_exp
+%type <sval> primary_exp
 
 %type <params> opt_actual_param;
 %type <params> actual_param ;
@@ -103,36 +105,37 @@ opt_formal_param 	        : formal_param_list							{}
 formal_param_list       	: param_dcl									{}
 							| formal_param_list TCOMMA param_dcl		{};
 param_dcl				    : dcl_spec declarator 		    			{ update_symbol_type($2,current_type); update_function_param(current_func,current_type); update_symbol_kind($2,PARAM); };
-compound_st		        	: TLBRACE opt_dcl_list opt_stat_list TRBRACE { };
-							| error opt_dcl_list opt_stat_list TRBRACE { yyerrok; reportError("Missing left brace"); }
-							| TLBRACE opt_dcl_list opt_stat_list error { yyerrok; reportError("Missing right brace ");};
+compound_st:
+    TLBRACE { left_brace_cnt++; }
+    opt_dcl_list opt_stat_list 
+    TRBRACE { right_brace_cnt++; 
+    }
 opt_dcl_list				: declaration_list							{}
 							|		 									{};
 declaration_list		    : declaration								{}
 							| declaration_list declaration				{};
 
 declaration				    : dcl_spec init_dcl_list TSEMI				{ current_type = NONE_TYPE; }
-							| dcl_spec init_dcl_list error              {  yyerrok; reportError("Missing semicolon");  current_type = NONE_TYPE; };
-							| function_declaration					    {};
+							| function_declaration                        { }
+                           | dcl_spec init_dcl_list error                {  yyerror("Missing semicolon after declaration");  current_type = NONE_TYPE; yyerrok; };
 declaration_param 			: abbreviated_param | formal_param			{};
-function_declaration		: dcl_spec function_name declaration_param TSEMI {  }
-							| dcl_spec function_name declaration_param error { yyerrok;  reportError("Missing semicolon");  };
+function_declaration		: dcl_spec function_name declaration_param TSEMI { printf("function_declaration"); };
 dcl_spec_list 				: dcl_spec 									{ update_function_param(current_func,current_type); }
 							| dcl_spec_list TCOMMA dcl_spec  			{ update_function_param(current_func,current_type); };
 init_dcl_list				: init_declarator							{}
 							| init_dcl_list TCOMMA init_declarator		{};
 init_declarator			    : declarator								{ update_symbol_type($1, current_type); }
-							| declarator TASSIGN TNUMBER				{ if(current_type != INT_TYPE){ reportError("Type Mismatched. Expected int but float."); }
+							| declarator TASSIGN TNUMBER				{ if(current_type != INT_TYPE){ yyerror("Type Mismatched. Expected int but float."); }
 																			else{ update_symbol_type($1, current_type); } }
-							| declarator TASSIGN TFNUMBER 				{ if(current_type != FLOAT_TYPE){ reportError("Type Mismatched. Expected float but int."); } 
+							| declarator TASSIGN TFNUMBER 				{ if(current_type != FLOAT_TYPE){ yyerror("Type Mismatched. Expected float but int."); } 
 																			else{ update_symbol_type($1, current_type); } };
 
 declarator				    : TIDENT									{ $$ = $1; if(is_declared($1)){ char error_message[256]; 
 																				sprintf(error_message, "Aleardy declared identifier %s", $1);
-																				reportError(error_message); } else { update_symbol_kind($1,SCALAR); } }
+																				yyerror(error_message); } else { update_symbol_kind($1,SCALAR); } }
 														| TIDENT TLBRACKET opt_number TRBRACKET		{
 																			if ($3 < 0) {
-																				reportError("Error: Array size cannot be negative.");
+																				yyerror("Error: Array size cannot be negative.");
 																			} else {
 																				$$ = $1;
 																				update_symbol_kind($1, ARRAY);
@@ -141,7 +144,7 @@ declarator				    : TIDENT									{ $$ = $1; if(is_declared($1)){ char error_me
 																		}
 																	;
 
-opt_number				    : TNUMBER { if ($1 < 0) { reportError("Error: Array size cannot be negative."); $$ = 0; } else { $$ = $1; }}
+opt_number				    : TNUMBER { if ($1 < 0) { yyerror("Error: Array size cannot be negative."); $$ = 0; } else { $$ = $1; }}
 							|	{ 
 									$$ = 0; // 배열 크기 정해지지 않았을 경우 디폴트 크기 0으로 설정
 								
@@ -157,18 +160,17 @@ statement					: compound_st								{}
 							| if_st										{}
 							| while_st									{}
 							| return_st									{};
-expression_st	    		: opt_expression TSEMI						{}	
-							| opt_expression error 						{  yyerrok; reportError("Missing semicolon");  };
+expression_st
+    : opt_expression TSEMI { }
+    | error TSEMI { yyerror2("Invalid expression or missing semicolon"); yyerrok; }
+;
 
 opt_expression	        	: expression								{}
 							|											{};
 if_st						: TIF TLPAREN expression TRPAREN statement %prec LOWER_THAN_ELSE		{}
 							| TIF TLPAREN expression TRPAREN statement TELSE statement			{};
-while_st		    		: TWHILE TLPAREN expression TRPAREN statement {}
-							| TWHILE TLPAREN expression error statement   { yyerrok; reportError("Missing right paren"); }
-                            | TWHILE error expression TRPAREN statement   { yyerrok; reportError("Missing left paren"); };
-return_st					: TRETURN opt_expression TSEMI				{}
-							| TRETURN opt_expression error				{  yyerrok; reportError("Missing semicolon");  };
+while_st		    		: TWHILE TLPAREN expression TRPAREN statement{};
+return_st					: TRETURN opt_expression TSEMI				{};
 expression			    	: assignment_exp							{};
 assignment_exp		        : logical_or_exp							{ $$ = $1; }
 							| unary_exp TASSIGN assignment_exp			{}
@@ -176,9 +178,7 @@ assignment_exp		        : logical_or_exp							{ $$ = $1; }
 							| unary_exp TSUBASSIGN assignment_exp		{}
 							| unary_exp TMULASSIGN assignment_exp		{}
 							| unary_exp TDIVASSIGN assignment_exp		{}
-							| unary_exp TMODASSIGN assignment_exp		{}
-							| multiplicative_exp TASSIGN assignment_exp TSEMI { reportError("Invalid assignment expression"); };
-
+							| unary_exp TMODASSIGN assignment_exp		{};
 logical_or_exp   	    	: logical_and_exp         					{ $$ = $1; }
    							| logical_or_exp TOR logical_and_exp   		{};
 logical_and_exp   	        : equality_exp         						{ $$ = $1; }
@@ -205,10 +205,10 @@ unary_exp   				: postfix_exp         						{ $$ = $1; }
       						| TDEC unary_exp         					{};
 postfix_exp 				: primary_exp 								{ $$ = $1; }
 							| postfix_exp TLBRACKET expression TRBRACKET{}
-							| postfix_exp TLPAREN opt_actual_param TRPAREN { if(!is_func(current_func)){ reportError("Attempt to call a non-function"); } 
+							| postfix_exp TLPAREN opt_actual_param TRPAREN { if(!is_func(current_func)){ yyerror("Attempt to call a non-function"); } 
 																								else if(!check_param_match(current_func,$3))
 																								{
-																									reportError("Parameter not match");
+																									yyerror("Parameter not match");
 																								} }
 							| postfix_exp TINC 							{}
 							| postfix_exp TDEC							{};
@@ -221,7 +221,7 @@ actual_param_list 	        : assignment_exp 							{ Params* new_params = malloc
 primary_exp 			    : TIDENT 									{ $$ = get_symbol_type($1); if(!is_declared($1)){
 																				char error_message[256]; 
 																				sprintf(error_message, "Undeclared identifier %s", $1);
-																				reportError(error_message);
+																				yyerror(error_message);
 																							} 
 
 																				if(is_func($1)){
@@ -232,18 +232,20 @@ primary_exp 			    : TIDENT 									{ $$ = get_symbol_type($1); if(!is_declared
 							| TLPAREN expression TRPAREN 				{};
 %%
 
-void reportError(char *s)
+void yyerror(char *s)
 {
    printf("Error at line %d: %s\n", lineNumber, s);
     total_err_cnt++; 
 }
-
-void yyerror(char *s)
+void yyerror2(char *s)
 {
-   printf("Error at line %d: %s\n", lineNumber, s);
-   // total_err_cnt++; 
+    printf("line %d: %s\n", lineNumber-1, s);
 }
-
+void check_brace_balance() {
+    if (left_brace_cnt != right_brace_cnt) {
+        fprintf(stderr, "Error: Mismatched braces\n");
+    }
+}
 void semantic(int n)
 {
 	printf("reduced rule number = %d\n", n);
