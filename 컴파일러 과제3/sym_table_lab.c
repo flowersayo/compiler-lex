@@ -312,7 +312,7 @@ bool is_declared(char *ident)
 
     HTpointer htp = lookup_hash_table(ident, hash_value);
 
-    if (htp != NULL && sym_table[htp->index]->kind != NONE)
+    if (htp != NULL && sym_table[htp->index]->type != NONE)
     {
 
         return true;
@@ -379,7 +379,7 @@ bool check_param_match(char *func, Params *given_params)
     {
         if (func_params->types[i] != given_params->types[i])
         {
-            printf("func_params: %d, given_params: %d ", func_params->types[i], given_params->types[i]);
+
             return false;
         }
     }

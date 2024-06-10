@@ -9,15 +9,16 @@
    $ flex scanner.l
 
 2. bison 명령어로 parser.tab.h parser.tab.c 생성하기
-   $ bison -d parser.y %-d 를 주면 공통된 토큰을 포함한 헤더 파일을 아웃풋으로 산출 할수 있음
+   $ bison -d parser.y % -d 옵션을 주면 공통된 토큰을 포함한 헤더 파일을 아웃풋으로 산출 할수 있음
 
 3. 컴파일
    gcc main.c parser_tab.h parser_tab.c hash_func.h hash_func.c sym_table_lab.h sym_table_lab.c tn.h reporterror.c
    // lex.yy.c 는 parser.y 에 이미 포함됨
 
-! parser.y 의 union 에서 커스텀 구조체를 사용할 경우 unknown type name 'Params'라는 에러가 나온다. 결과 parser.tab.h에 수동으로 #include "sym_table_lab.h” 넣어주어야 한다. 아니면 해당 구조체를 찾지 못했다는 에러가 뜬다.
+! parser.y 의 union 에서 사용자가 정의한 커스텀 구조체를 사용할 경우 unknown type name 'Params'라는 에러가 나온다.
+이를 해결하기 위하여 결과 parser.tab.h의 맨위에 수동으로 #include "sym_table_lab.h” 넣어주어야 한다.
 
-! union 을 사용할 경우 YYSTYPE가 중복정의되어있다는 오류가 있다. 따라서 parser_tab.c 의 71번째 줄에서 아래 구문을 제거해주어야 한다.
+! union 을 사용할 경우 YYSTYPE가 중복정의되어있다는 오류가 있다. 따라서 parser_tab.c 의 71번째 줄에서 TTSTYPE 구조체를 중복 정의한 아래 구문을 제거해주어야 한다.
 
 typedef union{
 int ival;

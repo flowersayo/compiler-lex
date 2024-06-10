@@ -1,3 +1,12 @@
+/**
+ *
+ * 추가적으로 구현한 케이스
+ *
+ * 1. 배열이 음수인 경우 ex) arr[-3]
+ * 2. while 문에 괄호가 빠진 경우 ex) while(true{ }, whiletrue){ }
+ *
+ */
+
 #include "tn.h"
 #include "parser_tab.h"
 #include "sym_table_lab.h"
